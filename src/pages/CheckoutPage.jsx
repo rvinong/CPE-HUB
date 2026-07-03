@@ -1,10 +1,13 @@
 import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { createOrder } from "../api/apiClient";
 import { MERCH_STATUS, formatPrice, normalizeMerch } from "../data/merch";
 
 const CheckoutPage = () => {
   const { cartItems, clearCart } = useCart();
+  const { isAuthenticated, isSupabaseConfigured } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
@@ -24,33 +27,19 @@ const CheckoutPage = () => {
     setLoading(true);
     setMessage("");
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setMessage("Please log in to proceed with checkout.");
+    if (!isAuthenticated) {
+      setMessage(isSupabaseConfigured ? "Please log in to proceed with checkout." : "Add Supabase env keys before checkout.");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({ items: checkoutItems, total }),
-      });
-
-      if (response.ok) {
-        setMessage("Order placed successfully. Redirecting to your account.");
-        clearCart();
-        setTimeout(() => {
-          navigate("/account?tab=orders");
-        }, 1600);
-      } else {
-        const errorData = await response.json();
-        setMessage(`Failed to place order: ${errorData.message || "Unknown error"}`);
-      }
+      await createOrder({ items: checkoutItems, total });
+      setMessage("Order placed successfully. Redirecting to your account.");
+      clearCart();
+      setTimeout(() => {
+        navigate("/account?tab=orders");
+      }, 1600);
     } catch (error) {
       setMessage(`Error placing order: ${error.message || "Please try again later."}`);
     } finally {

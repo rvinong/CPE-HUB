@@ -3,15 +3,21 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="page-shell grid min-h-[50vh] place-items-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500">Checking access</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
-    // Redirect to login if not authenticated
     return <Navigate to="/account" replace />;
   }
 
   if (!isAdmin) {
-    // Redirect to home or unauthorized page if not admin
     return <Navigate to="/" replace />;
   }
 

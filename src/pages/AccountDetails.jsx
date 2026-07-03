@@ -1,18 +1,30 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import Orders from '../components/Orders';
 import Addresses from '../components/Addresses';
 import { useAuth } from '../context/AuthContext';
 
 const AccountDetails = () => {
   const [activeTab, setActiveTab] = useState('orders');
-  const { logout } = useAuth();
+  const { isAuthenticated, loading, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/account');
   };
+
+  if (loading) {
+    return (
+      <div className="page-shell grid min-h-[50vh] place-items-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500">Loading account</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/account" replace />;
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow mt-10">

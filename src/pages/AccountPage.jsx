@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 export default function AccountPage() {
   const [showLogin, setShowLogin] = useState(true);
   const [activeTab, setActiveTab] = useState('orders');
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, loading, logout } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
@@ -27,6 +27,14 @@ export default function AccountPage() {
   const handleLogout = () => {
     logout();
   };
+
+  if (loading) {
+    return (
+      <div className="page-shell grid min-h-[50vh] place-items-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500">Loading account</p>
+      </div>
+    );
+  }
 
   if (isAuthenticated) {
     return (

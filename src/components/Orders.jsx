@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import apiClient, { setAuthToken, getOrders, updateOrderStatus } from '../api/apiClient';
+import React, { useEffect, useState } from "react";
+import { getOrders, updateOrderStatus } from "../api/apiClient";
+import { formatPrice } from "../data/merch";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -11,13 +12,11 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const token = localStorage.getItem('token');
-      setAuthToken(token);
       const response = await getOrders();
       setOrders(response.data);
       setError(null);
     } catch (err) {
-      setError('Failed to load orders.');
+      setError("Failed to load orders.");
     } finally {
       setLoading(false);
     }
@@ -37,22 +36,14 @@ const Orders = () => {
     setCancellingOrderId(orderToCancel);
     setShowConfirm(false);
     try {
-      const token = localStorage.getItem('token');
-      setAuthToken(token);
-      await updateOrderStatus(orderToCancel, { status: 'Cancelled' });
-      // Refresh orders after cancellation
+      await updateOrderStatus(orderToCancel, { status: "Cancelled" });
       await fetchOrders();
     } catch (err) {
-      alert('Failed to cancel order.');
+      setError("Failed to cancel order.");
     } finally {
       setCancellingOrderId(null);
       setOrderToCancel(null);
     }
-  };
-
-  const cancelCancelOrder = () => {
-    setShowConfirm(false);
-    setOrderToCancel(null);
   };
 
   if (loading) return <div>Loading orders...</div>;
@@ -60,49 +51,45 @@ const Orders = () => {
   if (orders.length === 0) return <div>No orders found.</div>;
 
   return (
-    <div>
+    <div className="grid gap-4">
       {orders.map((order) => (
-        <div key={order._id} className="border p-4 mb-4 rounded shadow">
-          <h3 className="font-semibold mb-2">Order ID: {order._id}</h3>
-          <p>Status: {order.status}</p>
-          <p>Total: ₱{order.total.toFixed(2)}</p>
-          <div className="mt-2">
-            <h4 className="font-semibold">Items:</h4>
-            <ul className="list-disc list-inside">
+        <div key={order.id} className="border border-neutral-950/10 bg-white p-4">
+          <h3 className="font-semibold">Order ID: {order.id}</h3>
+          <p className="mt-1 text-sm text-neutral-600">Status: {order.status}</p>
+          <p className="mt-1 text-sm font-semibold">Total: {formatPrice(order.total)}</p>
+          <div className="mt-3">
+            <h4 className="font-semibold">Items</h4>
+            <ul className="mt-2 grid gap-1 text-sm text-neutral-600">
               {order.items.map((item, index) => (
-                <li key={index}>
-                  {item.name} - Qty: {item.qty} - Size: {item.size} - Price: ₱{item.price.toFixed(2)}
+                <li key={`${order.id}-${index}`}>
+                  {item.name} - Qty: {item.qty}
+                  {item.size ? ` - Size: ${item.size}` : ""} - {formatPrice(item.price)}
                 </li>
               ))}
             </ul>
           </div>
-          {order.status !== 'Cancelled' && (
+          {order.status !== "Cancelled" && (
             <button
-              onClick={() => confirmCancelOrder(order._id)}
-              disabled={cancellingOrderId === order._id}
-              className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              type="button"
+              onClick={() => confirmCancelOrder(order.id)}
+              disabled={cancellingOrderId === order.id}
+              className="mt-4 bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
             >
-              {cancellingOrderId === order._id ? 'Cancelling...' : 'Cancel Order'}
+              {cancellingOrderId === order.id ? "Cancelling..." : "Cancel Order"}
             </button>
           )}
         </div>
       ))}
 
       {showConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm bg-white p-6 shadow-lg">
             <p className="mb-4">Are you sure you want to cancel this order?</p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={cancelCancelOrder}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => setShowConfirm(false)} className="border px-4 py-2">
                 No
               </button>
-              <button
-                onClick={handleCancelOrder}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
+              <button type="button" onClick={handleCancelOrder} className="bg-red-600 px-4 py-2 text-white">
                 Yes, Cancel
               </button>
             </div>

@@ -6,6 +6,7 @@ import {
   getProducts,
   getUsers,
   updateProductStock,
+  uploadMerchImage,
 } from "../api/apiClient";
 import { MERCH_STATUS, formatPrice, normalizeMerchList } from "../data/merch";
 
@@ -24,7 +25,7 @@ const emptyProduct = {
 
 const inputClass = "h-11 border border-neutral-950/20 bg-white px-3 text-sm outline-none focus:border-neutral-950";
 
-function ProductForm({ data, setData, mode }) {
+function ProductForm({ data, setData, mode, onImageUpload, uploading }) {
   const isArchive = data.status === MERCH_STATUS.ARCHIVED;
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -55,6 +56,16 @@ function ProductForm({ data, setData, mode }) {
         <option value="essential">Essential</option>
       </select>
       <input name="image" placeholder="Image URL" value={data.image} onChange={handleChange} className={`${inputClass} lg:col-span-2`} />
+      <label className={`${inputClass} flex cursor-pointer items-center gap-3 lg:col-span-2`}>
+        <span className="text-sm font-semibold">{uploading ? "Uploading image..." : "Upload image"}</span>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(event) => onImageUpload(event.target.files?.[0], setData)}
+          className="hidden"
+          disabled={uploading}
+        />
+      </label>
       {!isArchive && (
         <>
           <input type="number" name="price" placeholder="Price" value={data.price} onChange={handleChange} className={inputClass} />
@@ -73,6 +84,7 @@ function AdminDashboard() {
   const [newProduct, setNewProduct] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
   const [editingProductData, setEditingProductData] = useState(emptyProduct);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [addProductError, setAddProductError] = useState("");
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -102,7 +114,7 @@ function AdminDashboard() {
       const response = await getProducts();
       setProducts(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      setAddProductError("Could not load products. Make sure the backend is running.");
+      setAddProductError("Could not load products. Check your Supabase configuration.");
     }
   };
 
@@ -202,6 +214,20 @@ function AdminDashboard() {
     }
   };
 
+  const handleImageUpload = async (file, setData) => {
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const result = await uploadMerchImage(file);
+      setData((prev) => ({ ...prev, image: result.data.publicUrl }));
+      setAddProductError("");
+    } catch (error) {
+      setAddProductError("Image upload failed. Check Supabase Storage setup.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   return (
     <div className="bg-[#f7f4ef] py-10">
       <div className="page-shell">
@@ -235,7 +261,13 @@ function AdminDashboard() {
                 Available merch can be ordered. Archive merch only needs photo, name, and year.
               </p>
               <div className="mt-5">
-                <ProductForm data={newProduct} setData={setNewProduct} mode="add" />
+                <ProductForm
+                  data={newProduct}
+                  setData={setNewProduct}
+                  mode="add"
+                  onImageUpload={handleImageUpload}
+                  uploading={uploadingImage}
+                />
               </div>
               {addProductError && <p className="mt-4 text-sm font-semibold text-red-600">{addProductError}</p>}
               <button
@@ -268,7 +300,13 @@ function AdminDashboard() {
                       <tr key={product.productId} className="border-b border-neutral-950/10 align-top">
                         <td className="px-4 py-4 font-semibold">{product.productId}</td>
                         <td colSpan={7} className="px-4 py-4">
-                          <ProductForm data={editingProductData} setData={setEditingProductData} mode="edit" />
+                          <ProductForm
+                            data={editingProductData}
+                            setData={setEditingProductData}
+                            mode="edit"
+                            onImageUpload={handleImageUpload}
+                            uploading={uploadingImage}
+                          />
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">

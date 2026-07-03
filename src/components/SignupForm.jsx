@@ -1,32 +1,35 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { signup as apiSignup } from '../api/apiClient';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+const fieldClass = "w-full border border-neutral-950/20 bg-[#f7f4ef] px-3 py-3 outline-none focus:border-neutral-950";
 
 const SignupForm = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [birthday, setBirthday] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [birthday, setBirthday] = useState("");
   const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signup, isSupabaseConfigured } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError(null);
+    setSubmitting(true);
     try {
-      const response = await apiSignup({ name, email, password, mobile, birthday });
-      const token = response.data.token;
-      login(token);
-      navigate('/account/details');
-    } catch (err) {
-      if (err.response && err.response.status === 409) {
-        setError('Email is already registered.');
+      const data = await signup({ name, email, password, mobile, birthday });
+      if (data.session) {
+        navigate("/account/details");
       } else {
-        setError('Signup failed. Please try again.');
+        setError("Check your email to confirm your account, then log in.");
       }
+    } catch (err) {
+      setError(isSupabaseConfigured ? "Signup failed. Please try again." : "Add Supabase env keys first.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -37,50 +40,50 @@ const SignupForm = () => {
         type="text"
         placeholder="Name"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(event) => setName(event.target.value)}
         required
-        className="w-full border border-gray-300 rounded px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className={fieldClass}
       />
       <input
         id="email"
         type="email"
         placeholder="E-mail"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(event) => setEmail(event.target.value)}
         required
-        className="w-full border border-gray-300 rounded px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className={fieldClass}
       />
       <input
         id="password"
         type="password"
         placeholder="Password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(event) => setPassword(event.target.value)}
         required
-        className="w-full border border-gray-300 rounded px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className={fieldClass}
       />
       <input
         id="mobile"
         type="tel"
-        placeholder="Mobile Number"
+        placeholder="Mobile number"
         value={mobile}
-        onChange={(e) => setMobile(e.target.value)}
-        className="w-full border border-gray-300 rounded px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        onChange={(event) => setMobile(event.target.value)}
+        className={fieldClass}
       />
       <input
         id="birthday"
         type="date"
-        placeholder="Birthday"
         value={birthday}
-        onChange={(e) => setBirthday(e.target.value)}
-        className="w-full border border-gray-300 rounded px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        onChange={(event) => setBirthday(event.target.value)}
+        className={fieldClass}
       />
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {error && <div className="text-sm font-semibold text-red-600">{error}</div>}
       <button
         type="submit"
-        className="w-full bg-black text-white py-2 rounded mt-2 hover:bg-gray-900 transition-colors"
+        disabled={submitting}
+        className="w-full bg-neutral-950 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-neutral-700 disabled:opacity-50"
       >
-        Sign Up
+        {submitting ? "Creating Account" : "Sign Up"}
       </button>
     </form>
   );

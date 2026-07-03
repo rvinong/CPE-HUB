@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { MERCH_STATUS, formatPrice, getFallbackProducts } from "../data/merch";
+import { getProducts } from "../api/apiClient";
+import { MERCH_STATUS, formatPrice } from "../data/merch";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -10,15 +11,30 @@ function useQuery() {
 export default function SearchResultsPage() {
   const { addToCart } = useCart();
   const [toast, setToast] = useState("");
+  const [products, setProducts] = useState([]);
   const query = useQuery();
   const searchTerm = query.get("q") || "";
 
+  useEffect(() => {
+    let mounted = true;
+    getProducts()
+      .then((response) => {
+        if (mounted) setProducts(response.data);
+      })
+      .catch(() => {
+        if (mounted) setProducts([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const filteredProducts = useMemo(() => {
     const lowerSearchTerm = searchTerm.toLowerCase();
-    return getFallbackProducts().filter((product) =>
+    return products.filter((product) =>
       `${product.name} ${product.year} ${product.category}`.toLowerCase().includes(lowerSearchTerm)
     );
-  }, [searchTerm]);
+  }, [products, searchTerm]);
 
   const showToast = (message) => {
     setToast(message);
