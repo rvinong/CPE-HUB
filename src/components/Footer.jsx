@@ -1,45 +1,39 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="bg-white text-gray-800 py-16 mt-16 border-t border-gray-200">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+    <footer className="border-t border-neutral-950 bg-neutral-950 text-white">
+      <div className="page-shell grid gap-10 py-12 md:grid-cols-[1.3fr_0.7fr_0.7fr]">
         <div>
-          <h3 className="text-2xl font-extrabold mb-6">CPE HUB</h3>
-          <p className="text-gray-600 leading-relaxed">
-            Premium streetwear and accessories. Stay fresh with our exclusive collections.
+          <h2 className="text-3xl font-black uppercase tracking-[0.14em]">CPE HUB</h2>
+          <p className="mt-4 max-w-md text-sm leading-7 text-white/65">
+            Yearly computer engineering merch drops, with a clean archive of past releases.
           </p>
         </div>
+
         <div>
-          <h4 className="text-xl font-semibold mb-5 border-b border-gray-300 pb-2">Shop</h4>
-          <ul className="space-y-3 text-gray-700">
-<li><a href="#" className="hover:text-primary transition-colors duration-200">New Arrivals</a></li>
-<li><a href="#" className="hover:text-primary transition-colors duration-200">Best Sellers</a></li>
-<li><a href="#" className="hover:text-primary transition-colors duration-200">Collections</a></li>
-<li><a href="#" className="hover:text-primary transition-colors duration-200">Sale</a></li>
-          </ul>
+          <h3 className="text-xs font-bold uppercase tracking-[0.24em] text-white/50">Navigate</h3>
+          <div className="mt-4 grid gap-3 text-sm font-semibold">
+            <Link to="/products" className="hover:text-white/60">Shop</Link>
+            <Link to="/products?view=archive" className="hover:text-white/60">Archive</Link>
+            <Link to="/about" className="hover:text-white/60">About</Link>
+          </div>
         </div>
+
         <div>
-          <h4 className="text-xl font-semibold mb-5 border-b border-gray-300 pb-2">Customer Service</h4>
-          <ul className="space-y-3 text-gray-700">
-<li><a href="#" className="hover:text-primary transition-colors duration-200">Contact Us</a></li>
-<li><a href="#" className="hover:text-primary transition-colors duration-200">Shipping & Returns</a></li>
-<li><a href="#" className="hover:text-primary transition-colors duration-200">FAQ</a></li>
-<li><a href="#" className="hover:text-primary transition-colors duration-200">Privacy Policy</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-xl font-semibold mb-5 border-b border-gray-300 pb-2">Follow Us</h4>
-          <div className="flex space-x-6 text-gray-700">
-<a href="#" aria-label="Facebook" className="hover:text-primary transition-colors duration-200">Facebook</a>
-<a href="#" aria-label="Instagram" className="hover:text-primary transition-colors duration-200">Instagram</a>
-<a href="#" aria-label="Twitter" className="hover:text-primary transition-colors duration-200">Twitter</a>
-<a href="#" aria-label="TikTok" className="hover:text-primary transition-colors duration-200">TikTok</a>
+          <h3 className="text-xs font-bold uppercase tracking-[0.24em] text-white/50">Orders</h3>
+          <div className="mt-4 grid gap-3 text-sm font-semibold">
+            <Link to="/account" className="hover:text-white/60">Account</Link>
+            <Link to="/checkout" className="hover:text-white/60">Checkout</Link>
           </div>
         </div>
       </div>
-      <div className="mt-12 text-center text-gray-500 text-sm border-t border-gray-200 pt-6">
-        © {new Date().getFullYear()} CPE HUB. All rights reserved.
+      <div className="border-t border-white/15 py-5">
+        <div className="page-shell flex flex-col justify-between gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/45 sm:flex-row">
+          <span>Copyright {new Date().getFullYear()} CPE HUB</span>
+          <span>Computer Engineering Merch</span>
+        </div>
       </div>
     </footer>
   );

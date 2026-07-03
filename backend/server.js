@@ -60,9 +60,13 @@ const stockSchema = new mongoose.Schema({
   productId: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   category: String,
+  status: { type: String, enum: ['available', 'archived'], default: 'available' },
+  year: Number,
+  description: String,
   price: Number,
   sizes: [String],
   image: String,
+  images: [String],
   quantity: { type: Number, required: true, default: 0 },
 }, { timestamps: true });
 
@@ -271,7 +275,7 @@ app.get('/api/stock', async (req, res) => {
 // Update stock quantity (admin or protected route)
 app.put('/api/stock/:productId', async (req, res) => {
   const { productId } = req.params;
-  const { quantity, name, category, price, sizes, image } = req.body;
+  const { quantity, name, category, status, year, description, price, sizes, image, images } = req.body;
   try {
     let stock = await Stock.findOne({ productId: Number(productId) });
     if (!stock) {
@@ -280,18 +284,26 @@ app.put('/api/stock/:productId', async (req, res) => {
         productId: Number(productId),
         name,
         category,
+        status,
+        year,
+        description,
         price,
         sizes,
         image,
+        images,
         quantity,
       });
     } else {
       // Update existing stock item
       stock.name = name || stock.name;
       stock.category = category || stock.category;
-      stock.price = price || stock.price;
-      stock.sizes = sizes || stock.sizes;
+      stock.status = status || stock.status;
+      stock.year = year !== undefined ? year : stock.year;
+      stock.description = description !== undefined ? description : stock.description;
+      stock.price = price !== undefined ? price : stock.price;
+      stock.sizes = sizes !== undefined ? sizes : stock.sizes;
       stock.image = image || stock.image;
+      stock.images = images || stock.images;
       stock.quantity = quantity !== undefined ? quantity : stock.quantity;
     }
     await stock.save();
@@ -304,9 +316,9 @@ app.put('/api/stock/:productId', async (req, res) => {
 
 // Create new product (stock item)
 app.post('/api/products', async (req, res) => {
-  const { productId, name, category, price, sizes, image, quantity } = req.body;
-  if (!productId || !name || price === undefined) {
-    return res.status(400).json({ message: 'productId, name, and price are required' });
+  const { productId, name, category, status, year, description, price, sizes, image, images, quantity } = req.body;
+  if (!productId || !name) {
+    return res.status(400).json({ message: 'productId and name are required' });
   }
   try {
     const existing = await Stock.findOne({ productId: Number(productId) });
@@ -317,9 +329,13 @@ app.post('/api/products', async (req, res) => {
       productId: Number(productId),
       name,
       category,
-      price,
-      sizes,
+      status: status || 'available',
+      year,
+      description,
+      price: price || 0,
+      sizes: sizes || [],
       image,
+      images,
       quantity: quantity || 0,
     });
     await product.save();
@@ -379,7 +395,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     // Check stock availability and update quantities
     for (const item of items) {
       const stockItem = await Stock.findOne({ productId: item.productId });
-      if (!stockItem || stockItem.quantity < item.qty) {
+      if (!stockItem || stockItem.status === 'archived' || stockItem.quantity < item.qty) {
         return res.status(400).json({ message: `Insufficient stock for productId ${item.productId}` });
       }
     }

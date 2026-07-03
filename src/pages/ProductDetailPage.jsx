@@ -1,206 +1,218 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { motion } from "framer-motion";
 import { getProductById } from "../api/apiClient";
+import {
+  MERCH_STATUS,
+  formatPrice,
+  getProductFromFallback,
+  normalizeMerch,
+} from "../data/merch";
 
 export default function ProductDetailPage() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [product, setProduct] = useState(null);
-  const [added, setAdded] = useState(false);
+  const [product, setProduct] = useState(getProductFromFallback(productId));
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
+    let mounted = true;
     const fetchProduct = async () => {
       setLoading(true);
-      setError(null);
       try {
         const response = await getProductById(productId);
-        setProduct(response.data);
-      } catch (err) {
-        setError("Failed to load product.");
+        if (mounted && response.data) {
+          setProduct(normalizeMerch(response.data));
+        }
+      } catch (error) {
+        if (mounted) setProduct(getProductFromFallback(productId));
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
+
     fetchProduct();
+    return () => {
+      mounted = false;
+    };
   }, [productId]);
 
-  if (loading) {
+  const images = useMemo(() => {
+    if (!product) return [];
+    return Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : [product.image || "/images/product1.png"];
+  }, [product]);
+
+  if (loading && !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading product...
+      <div className="page-shell grid min-h-[60vh] place-items-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500">Loading merch</p>
       </div>
     );
   }
 
-  if (error) {
+  if (!product || !Number.isFinite(product.productId)) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
-        {error}
+      <div className="page-shell grid min-h-[60vh] place-items-center text-center">
+        <div>
+          <h1 className="text-3xl font-black uppercase">Merch not found</h1>
+          <Link to="/products" className="mt-4 inline-block text-sm font-bold uppercase tracking-[0.18em] underline">
+            Back to shop
+          </Link>
+        </div>
       </div>
     );
   }
 
-  if (!product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Product not found.</p>
-      </div>
-    );
-  }
+  const isArchived = product.status === MERCH_STATUS.ARCHIVED;
+  const oneSize = product.sizes.some((size) => size.toLowerCase() === "one size");
 
-  const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : [product.image || "/images/product1.png"];
-
-  const handleAddToCart = () => {
-    if (!product.sizes || product.sizes.length === 0) {
-      addToCart({ ...product, qty: quantity, size: '', image: images[0] });
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
-      return;
-    }
-    // If product sizes include "one size", allow add to cart without size selection
-    if (
-      product.sizes.some((size) => size.toLowerCase() === "one size")
-    ) {
-      addToCart({ ...product, qty: quantity, size: "one size", image: images[0] });
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
-      return;
-    }
-    if (!selectedSize) {
-      alert("Please select a size.");
-      return;
-    }
-    addToCart({ ...product, qty: quantity, size: selectedSize, image: images[0] });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+  const showToast = (message) => {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 1800);
   };
 
-  const incrementQty = () => setQuantity((q) => q + 1);
-  const decrementQty = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
+  const handleAddToCart = () => {
+    const size = oneSize ? "One Size" : selectedSize;
+    if (!size && product.sizes.length > 0) {
+      showToast("Select a size first.");
+      return;
+    }
+
+    addToCart({
+      ...product,
+      qty: quantity,
+      size: size || "",
+      image: images[selectedImageIndex] || product.image,
+    });
+    showToast("Added to cart.");
+  };
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto p-6 bg-white rounded shadow mt-8 relative">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 text-blue-600 hover:underline"
-      >
-        &larr; Back
-      </button>
-      <div className="flex flex-col md:flex-row gap-10">
-        <div className="md:w-1/2">
-          <div className="border rounded overflow-hidden">
-            <motion.img
-              key={images[selectedImageIndex]}
-              src={images[selectedImageIndex]}
-              alt={product.name}
-              className="w-full h-auto object-contain"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-          <div className="flex mt-4 space-x-4">
-            {images.map((img, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImageIndex(index)}
-                className={`border rounded p-1 ${
-                  selectedImageIndex === index ? "border-primary" : "border-gray-300"
-                }`}
-              >
+    <div className="bg-[#f7f4ef] py-8 sm:py-12">
+      <div className="page-shell">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-8 text-xs font-bold uppercase tracking-[0.2em] text-neutral-600 transition hover:text-neutral-950"
+        >
+          Back
+        </button>
+
+        {isArchived ? (
+          <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <div className="bg-neutral-200">
+              <img
+                src={images[selectedImageIndex]}
+                alt={product.name}
+                className="aspect-[4/5] w-full object-contain p-8 grayscale"
+              />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black uppercase leading-none sm:text-6xl">{product.name}</h1>
+              <p className="mt-4 text-lg font-semibold uppercase tracking-[0.2em] text-neutral-500">{product.year}</p>
+            </div>
+          </section>
+        ) : (
+          <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <div className="product-media">
                 <img
-                  src={img}
-                  alt={`${product.name} ${index + 1}`}
-                  className="w-16 h-16 object-contain"
+                  src={images[selectedImageIndex]}
+                  alt={product.name}
+                  className="aspect-[4/5] w-full object-contain p-8"
                 />
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="md:w-1/2 flex flex-col justify-between">
-          <div>
-            <h1 className="text-4xl font-extrabold mb-4">{product.name}</h1>
-            <p className="text-2xl text-gray-800 mb-6">₱ {product.price}</p>
-            <p className="mb-6 text-gray-700">{product.description}</p>
-            {!product.name.toLowerCase().includes("lace") && product.category !== "essential" && (
-              <div className="mb-6">
-                <h3 className="font-semibold mb-2">Size</h3>
-                <div className="flex space-x-4">
-                  {product.sizes
-                    .filter((size) => !(product.category === "essential" && size.toLowerCase() === "one size"))
-                    .map((size) => (
+              </div>
+              {images.length > 1 && (
+                <div className="mt-4 flex gap-3">
+                  {images.map((image, index) => (
+                    <button
+                      key={image}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`h-20 w-20 border bg-white p-1 ${
+                        selectedImageIndex === index ? "border-neutral-950" : "border-neutral-950/15"
+                      }`}
+                    >
+                      <img src={image} alt={`${product.name} ${index + 1}`} className="h-full w-full object-contain" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="lg:pt-10">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">{product.year} Drop</p>
+              <h1 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">{product.name}</h1>
+              <p className="mt-5 text-xl font-semibold">{formatPrice(product.price)}</p>
+              {product.description && <p className="mt-5 max-w-xl leading-7 text-neutral-600">{product.description}</p>}
+
+              {!oneSize && product.sizes.length > 0 && (
+                <div className="mt-8">
+                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em]">Size</p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.sizes.map((size) => (
                       <button
                         key={size}
+                        type="button"
                         onClick={() => setSelectedSize(size)}
-                        className={`border rounded px-4 py-2 font-semibold transition ${
+                        className={`h-11 min-w-12 border px-4 text-sm font-bold uppercase transition ${
                           selectedSize === size
-                            ? "border-primary bg-blue-900 text-white"
-                            : "border-gray-400 text-gray-700 hover:bg-gray-100"
+                            ? "border-neutral-950 bg-neutral-950 text-white"
+                            : "border-neutral-950/20 bg-white text-neutral-900 hover:border-neutral-950"
                         }`}
                       >
                         {size}
                       </button>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-8">
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em]">Quantity</p>
+                <div className="flex h-12 w-36 border border-neutral-950/20 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                    className="grid w-12 place-items-center text-xl"
+                  >
+                    -
+                  </button>
+                  <span className="grid flex-1 place-items-center text-sm font-bold">{quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((value) => value + 1)}
+                    className="grid w-12 place-items-center text-xl"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
-            )}
-            <div className="flex items-center space-x-4 mb-6">
+
               <button
-                onClick={decrementQty}
-                className="border border-gray-400 px-4 py-2 rounded text-xl font-semibold hover:bg-gray-100 transition"
+                type="button"
+                onClick={handleAddToCart}
+                className="mt-8 w-full bg-neutral-950 px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-700"
               >
-                -
-              </button>
-              <span className="text-xl font-semibold">{quantity}</span>
-              <button
-                onClick={incrementQty}
-                className="border border-gray-400 px-4 py-2 rounded text-xl font-semibold hover:bg-gray-100 transition"
-              >
-                +
+                Add to Cart
               </button>
             </div>
-            <button
-              onClick={handleAddToCart}
-              className="bg-white text-black border border-black text-sm px-4 py-2 rounded hover:bg-blue-900 hover:text-white transition-colors relative"
-            >
-              Add to Cart
-            </button>
-          </div>
-        </div>
+          </section>
+        )}
       </div>
-      {added && (
-        <div
-          className="fixed bottom-8 bg-gray-800 text-white text-sm rounded px-4 py-2 shadow-lg animate-fadeInUp z-50"
-          style={{ left: 'calc(50% - 45px)' }}
-        >
-          Added to cart
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 bg-neutral-950 px-5 py-3 text-sm font-semibold text-white shadow-xl">
+          {toast}
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes fadeInUp {
-          0% {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeInUp {
-          animation: fadeInUp 0.3s ease forwards;
-        }
-      `}</style>
     </div>
   );
 }

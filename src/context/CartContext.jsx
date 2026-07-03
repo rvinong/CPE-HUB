@@ -1,5 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { MERCH_STATUS, normalizeMerch } from '../data/merch';
 
 const CartContext = createContext();
 
@@ -100,16 +101,23 @@ export const CartProvider = ({ children }) => {
   }, [cartItems, token]);
 
   const addToCart = (product) => {
-    console.log('CartContext: addToCart called with product', product);
+    const normalizedProduct = normalizeMerch({
+      ...product,
+      qty: Number(product.qty || 1),
+    });
+    if (normalizedProduct.status === MERCH_STATUS.ARCHIVED) {
+      return;
+    }
+    console.log('CartContext: addToCart called with product', normalizedProduct);
     setCartItems((prevItems) => {
-      const id = `${product.productId}-${product.size || 'default'}`;
+      const id = `${normalizedProduct.productId}-${normalizedProduct.size || 'default'}`;
       const existingItem = prevItems.find(item => item.id === id);
       if (existingItem) {
         return prevItems.map(item =>
-          item.id === id ? { ...item, qty: item.qty + product.qty } : item
+          item.id === id ? { ...item, qty: Number(item.qty || 0) + normalizedProduct.qty } : item
         );
       } else {
-        return [...prevItems, { ...product, id }];
+        return [...prevItems, { ...normalizedProduct, id }];
       }
     });
   };

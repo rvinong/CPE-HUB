@@ -1,46 +1,96 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  getProducts,
   createProduct,
-  updateProductStock,
   deleteProduct,
-  getUsers,
   getOrders,
-} from '../api/apiClient';
+  getProducts,
+  getUsers,
+  updateProductStock,
+} from "../api/apiClient";
+import { MERCH_STATUS, formatPrice, normalizeMerchList } from "../data/merch";
+
+const emptyProduct = {
+  productId: "",
+  name: "",
+  category: "tshirt",
+  status: MERCH_STATUS.AVAILABLE,
+  year: new Date().getFullYear(),
+  price: "",
+  sizes: "",
+  image: "",
+  quantity: "",
+  description: "",
+};
+
+const inputClass = "h-11 border border-neutral-950/20 bg-white px-3 text-sm outline-none focus:border-neutral-950";
+
+function ProductForm({ data, setData, mode }) {
+  const isArchive = data.status === MERCH_STATUS.ARCHIVED;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-4">
+      {mode === "add" && (
+        <input
+          type="number"
+          name="productId"
+          placeholder="Product ID"
+          value={data.productId}
+          onChange={handleChange}
+          className={inputClass}
+        />
+      )}
+      <input name="name" placeholder="Name" value={data.name} onChange={handleChange} className={inputClass} />
+      <input type="number" name="year" placeholder="Year" value={data.year} onChange={handleChange} className={inputClass} />
+      <select name="status" value={data.status} onChange={handleChange} className={inputClass}>
+        <option value={MERCH_STATUS.AVAILABLE}>Available</option>
+        <option value={MERCH_STATUS.ARCHIVED}>Archive</option>
+      </select>
+      <select name="category" value={data.category} onChange={handleChange} className={inputClass}>
+        <option value="tshirt">Shirt</option>
+        <option value="lace">Lace</option>
+        <option value="essential">Essential</option>
+      </select>
+      <input name="image" placeholder="Image URL" value={data.image} onChange={handleChange} className={`${inputClass} lg:col-span-2`} />
+      {!isArchive && (
+        <>
+          <input type="number" name="price" placeholder="Price" value={data.price} onChange={handleChange} className={inputClass} />
+          <input name="sizes" placeholder="Sizes, comma separated" value={data.sizes} onChange={handleChange} className={inputClass} />
+          <input type="number" name="quantity" placeholder="Stock" value={data.quantity} onChange={handleChange} className={inputClass} />
+          <input name="description" placeholder="Description" value={data.description} onChange={handleChange} className={`${inputClass} lg:col-span-2`} />
+        </>
+      )}
+    </div>
+  );
+}
 
 function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('products');
-
-  // Product management state
+  const [activeTab, setActiveTab] = useState("products");
   const [products, setProducts] = useState([]);
-  const [newProduct, setNewProduct] = useState({
-    productId: '',
-    name: '',
-    category: '',
-    price: '',
-    sizes: '',
-    image: '',
-    quantity: '',
-  });
+  const [newProduct, setNewProduct] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
-  const [editingProductData, setEditingProductData] = useState({});
-
-  // User management state
+  const [editingProductData, setEditingProductData] = useState(emptyProduct);
+  const [addProductError, setAddProductError] = useState("");
   const [users, setUsers] = useState([]);
-
-  // Order management state
   const [orders, setOrders] = useState([]);
-  const [userOrdersMap, setUserOrdersMap] = useState({});
+
+  const normalizedProducts = useMemo(
+    () => normalizeMerchList(products).sort((a, b) => b.year - a.year || b.productId - a.productId),
+    [products]
+  );
 
   useEffect(() => {
     let intervalId;
-    if (activeTab === 'products') {
+    if (activeTab === "products") {
       fetchProducts();
-    } else if (activeTab === 'users') {
+    } else if (activeTab === "users") {
       fetchUsers();
-    } else if (activeTab === 'orders') {
+    } else if (activeTab === "orders") {
       fetchUsersAndOrders();
-      intervalId = setInterval(fetchUsersAndOrders, 10000); // Poll every 10 seconds
+      intervalId = setInterval(fetchUsersAndOrders, 10000);
     }
     return () => {
       if (intervalId) clearInterval(intervalId);
@@ -50,148 +100,97 @@ function AdminDashboard() {
   const fetchProducts = async () => {
     try {
       const response = await getProducts();
-      setProducts(response.data);
+      setProducts(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      console.error('Failed to fetch products:', error);
+      setAddProductError("Could not load products. Make sure the backend is running.");
     }
   };
 
   const fetchUsers = async () => {
     try {
       const response = await getUsers();
-      console.log('Fetched users:', response.data);
-      if (Array.isArray(response.data)) {
-        setUsers(response.data);
-      } else if (response.data && Array.isArray(response.data.users)) {
-        setUsers(response.data.users);
-      } else {
-        setUsers([]);
-      }
+      setUsers(Array.isArray(response.data) ? response.data : response.data?.users || []);
     } catch (error) {
-      console.error('Failed to fetch users:', error);
-    }
-  };
-
-  const fetchOrders = async () => {
-    try {
-      const response = await getOrders();
-      setOrders(response.data);
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
+      setUsers([]);
     }
   };
 
   const fetchUsersAndOrders = async () => {
     try {
       const [usersResponse, ordersResponse] = await Promise.all([getUsers(), getOrders()]);
-      let usersData = [];
-      if (Array.isArray(usersResponse.data)) {
-        usersData = usersResponse.data;
-      } else if (usersResponse.data && Array.isArray(usersResponse.data.users)) {
-        usersData = usersResponse.data.users;
-      }
-      setUsers(usersData);
-
-      const ordersData = ordersResponse.data || [];
-      setOrders(ordersData);
-
-      // Map orders by userId
-
-      const map = {};
-      usersData.forEach(user => {
-        map[user._id] = [];
-      });
-      ordersData.forEach(order => {
-        const userId = order.userId?._id || order.userId;
-        if (map[userId]) {
-          map[userId].push(order);
-        }
-      });
-      setUserOrdersMap(map);
+      setUsers(Array.isArray(usersResponse.data) ? usersResponse.data : usersResponse.data?.users || []);
+      setOrders(Array.isArray(ordersResponse.data) ? ordersResponse.data : []);
     } catch (error) {
-      console.error('Failed to fetch users and orders:', error);
+      setUsers([]);
+      setOrders([]);
     }
   };
 
-
-  const handleNewProductChange = (e) => {
-    const { name, value } = e.target;
-    setNewProduct((prev) => ({ ...prev, [name]: value }));
+  const buildPayload = (data) => {
+    const isArchive = data.status === MERCH_STATUS.ARCHIVED;
+    return {
+      productId: Number(data.productId),
+      name: data.name.trim(),
+      category: data.category,
+      status: data.status,
+      year: Number(data.year),
+      image: data.image.trim(),
+      description: data.description || "",
+      price: isArchive ? 0 : Number(data.price || 0),
+      sizes: isArchive
+        ? []
+        : data.sizes
+            .split(",")
+            .map((size) => size.trim())
+            .filter(Boolean),
+      quantity: isArchive ? 0 : Number(data.quantity || 0),
+    };
   };
-
-  const [addProductError, setAddProductError] = useState('');
 
   const handleAddProduct = async () => {
     try {
-      const newProductId = Number(newProduct.productId);
-      if (products.some((p) => p.productId === newProductId)) {
-        setAddProductError('Product ID already exists. Please use a unique ID.');
+      const productData = buildPayload(newProduct);
+      if (!productData.productId || !productData.name || !productData.image || !productData.year) {
+        setAddProductError("Product ID, name, image, and year are required.");
         return;
       }
-      const productData = {
-        productId: newProductId,
-        name: newProduct.name,
-        category: newProduct.category,
-        price: Number(newProduct.price),
-        sizes: newProduct.sizes.split(',').map((s) => s.trim()),
-        image: newProduct.image,
-        quantity: Number(newProduct.quantity),
-      };
+      if (normalizedProducts.some((product) => product.productId === productData.productId)) {
+        setAddProductError("Product ID already exists. Use a unique ID.");
+        return;
+      }
       await createProduct(productData);
-      setNewProduct({
-        productId: '',
-        name: '',
-        category: '',
-        price: '',
-        sizes: '',
-        image: '',
-        quantity: '',
-      });
-      setAddProductError('');
+      setNewProduct(emptyProduct);
+      setAddProductError("");
       fetchProducts();
     } catch (error) {
-      console.error('Failed to add product:', error);
-      setAddProductError('Failed to add product. Please try again.');
+      setAddProductError("Failed to add product. Please try again.");
     }
   };
 
   const startEditing = (product) => {
     setEditingProductId(product.productId);
     setEditingProductData({
+      productId: product.productId,
       name: product.name,
       category: product.category,
+      status: product.status,
+      year: product.year,
       price: product.price,
-      sizes: product.sizes.join(', '),
+      sizes: product.sizes.join(", "),
       image: product.image,
       quantity: product.quantity,
+      description: product.description || "",
     });
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditingProductData((prev) => ({ ...prev, [name]: value }));
   };
 
   const saveEdit = async () => {
     try {
-      const stockData = {
-        name: editingProductData.name,
-        category: editingProductData.category,
-        price: Number(editingProductData.price),
-        sizes: editingProductData.sizes.split(',').map((s) => s.trim()),
-        image: editingProductData.image,
-        quantity: Number(editingProductData.quantity),
-      };
-      await updateProductStock(editingProductId, stockData);
+      await updateProductStock(editingProductId, buildPayload(editingProductData));
       setEditingProductId(null);
       fetchProducts();
     } catch (error) {
-      console.error('Failed to update product:', error);
+      setAddProductError("Failed to update product.");
     }
-  };
-
-  const cancelEdit = () => {
-    setEditingProductId(null);
   };
 
   const handleDelete = async (productId) => {
@@ -199,239 +198,112 @@ function AdminDashboard() {
       await deleteProduct(productId);
       fetchProducts();
     } catch (error) {
-      console.error('Failed to delete product:', error);
+      setAddProductError("Failed to delete product.");
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-      <div className="mb-4 border-b border-gray-300">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          <button
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'products'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('products')}
-          >
-            Product Management
-          </button>
-          <button
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'users'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('users')}
-          >
-            User Management
-          </button>
-          <button
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'orders'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('orders')}
-          >
-            Order Management
-          </button>
-        </nav>
-      </div>
+    <div className="bg-[#f7f4ef] py-10">
+      <div className="page-shell">
+        <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Admin</p>
+        <h1 className="mt-2 text-4xl font-black uppercase">Dashboard</h1>
 
-      <div>
-        {activeTab === 'products' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Product Management</h2>
-            <div className="mb-6">
-              <h3 className="font-semibold mb-2">Add New Product</h3>
-              <div className="grid grid-cols-2 gap-4 max-w-xl">
-                <input
-                  type="number"
-                  name="productId"
-                  placeholder="Product ID"
-                  value={newProduct.productId}
-                  onChange={handleNewProductChange}
-                  className="border border-gray-300 rounded px-3 py-1"
-                />
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Name"
-                  value={newProduct.name}
-                  onChange={handleNewProductChange}
-                  className="border border-gray-300 rounded px-3 py-1"
-                />
-                <input
-                  type="text"
-                  name="category"
-                  placeholder="Category"
-                  value={newProduct.category}
-                  onChange={handleNewProductChange}
-                  className="border border-gray-300 rounded px-3 py-1"
-                />
-                <input
-                  type="number"
-                  name="price"
-                  placeholder="Price"
-                  value={newProduct.price}
-                  onChange={handleNewProductChange}
-                  className="border border-gray-300 rounded px-3 py-1"
-                />
-                <input
-                  type="text"
-                  name="sizes"
-                  placeholder="Sizes (comma separated)"
-                  value={newProduct.sizes}
-                  onChange={handleNewProductChange}
-                  className="border border-gray-300 rounded px-3 py-1"
-                />
-                <input
-                  type="text"
-                  name="image"
-                  placeholder="Image URL"
-                  value={newProduct.image}
-                  onChange={handleNewProductChange}
-                  className="border border-gray-300 rounded px-3 py-1"
-                />
-                <input
-                  type="number"
-                  name="quantity"
-                  placeholder="Quantity"
-                  value={newProduct.quantity}
-                  onChange={handleNewProductChange}
-                  className="border border-gray-300 rounded px-3 py-1"
-                />
-                <button
-                  onClick={handleAddProduct}
-                  className="bg-primary text-white rounded px-4 py-2 hover:bg-primary-dark"
-                >
-                  Add Product
-                </button>
+        <div className="mt-8 flex flex-wrap gap-2 border-b border-neutral-950">
+          {[
+            ["products", "Products"],
+            ["users", "Users"],
+            ["orders", "Orders"],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] ${
+                activeTab === key ? "bg-neutral-950 text-white" : "bg-white text-neutral-700"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "products" && (
+          <section className="mt-8 grid gap-8">
+            <div className="bg-white p-5">
+              <h2 className="text-lg font-black uppercase">Add Merch</h2>
+              <p className="mt-2 text-sm text-neutral-500">
+                Available merch can be ordered. Archive merch only needs photo, name, and year.
+              </p>
+              <div className="mt-5">
+                <ProductForm data={newProduct} setData={setNewProduct} mode="add" />
               </div>
+              {addProductError && <p className="mt-4 text-sm font-semibold text-red-600">{addProductError}</p>}
+              <button
+                type="button"
+                onClick={handleAddProduct}
+                className="mt-5 bg-neutral-950 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white"
+              >
+                Add Merch
+              </button>
             </div>
 
-            <div>
-              <h3 className="font-semibold mb-2">Existing Products</h3>
-              <table className="min-w-full border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-2 py-1">ID</th>
-                    <th className="border border-gray-300 px-2 py-1">Name</th>
-                    <th className="border border-gray-300 px-2 py-1">Category</th>
-                    <th className="border border-gray-300 px-2 py-1">Price</th>
-                    <th className="border border-gray-300 px-2 py-1">Sizes</th>
-                    <th className="border border-gray-300 px-2 py-1">Image</th>
-                    <th className="border border-gray-300 px-2 py-1">Quantity</th>
-                    <th className="border border-gray-300 px-2 py-1">Actions</th>
+            <div className="overflow-auto bg-white">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-neutral-950 bg-neutral-950 text-white">
+                  <tr>
+                    <th className="px-4 py-3">ID</th>
+                    <th className="px-4 py-3">Image</th>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Year</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Category</th>
+                    <th className="px-4 py-3">Price</th>
+                    <th className="px-4 py-3">Stock</th>
+                    <th className="px-4 py-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) =>
+                  {normalizedProducts.map((product) =>
                     editingProductId === product.productId ? (
-                      <tr key={product.productId} className="align-middle">
-                        <td className="border border-gray-300 px-2 py-1 align-middle">{product.productId}</td>
-                        <td className="border border-gray-300 px-2 py-1 align-middle">
-                          <input
-                            type="text"
-                            name="name"
-                            value={editingProductData.name}
-                            onChange={handleEditChange}
-                            className="border border-gray-300 rounded px-2 py-1 w-full box-border"
-                            style={{ minWidth: '120px' }}
-                          />
+                      <tr key={product.productId} className="border-b border-neutral-950/10 align-top">
+                        <td className="px-4 py-4 font-semibold">{product.productId}</td>
+                        <td colSpan={7} className="px-4 py-4">
+                          <ProductForm data={editingProductData} setData={setEditingProductData} mode="edit" />
                         </td>
-                        <td className="border border-gray-300 px-2 py-1 align-middle">
-                          <input
-                            type="text"
-                            name="category"
-                            value={editingProductData.category}
-                            onChange={handleEditChange}
-                            className="border border-gray-300 rounded px-2 py-1 w-full box-border"
-                            style={{ minWidth: '100px' }}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 align-middle">
-                          <input
-                            type="number"
-                            name="price"
-                            value={editingProductData.price}
-                            onChange={handleEditChange}
-                            className="border border-gray-300 rounded px-2 py-1 w-full box-border"
-                            style={{ minWidth: '80px' }}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 align-middle">
-                          <input
-                            type="text"
-                            name="sizes"
-                            value={editingProductData.sizes}
-                            onChange={handleEditChange}
-                            className="border border-gray-300 rounded px-2 py-1 w-full box-border"
-                            style={{ minWidth: '120px' }}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 align-middle">
-                          <input
-                            type="text"
-                            name="image"
-                            value={editingProductData.image}
-                            onChange={handleEditChange}
-                            className="border border-gray-300 rounded px-2 py-1 w-full box-border"
-                            style={{ minWidth: '150px' }}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 align-middle">
-                          <input
-                            type="number"
-                            name="quantity"
-                            value={editingProductData.quantity}
-                            onChange={handleEditChange}
-                            className="border border-gray-300 rounded px-2 py-1 w-full box-border"
-                            style={{ minWidth: '80px' }}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 space-x-2 align-middle whitespace-nowrap">
-                          <button
-                            onClick={saveEdit}
-                            className="bg-green-600 text-white rounded px-3 py-1 hover:bg-green-700"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={cancelEdit}
-                            className="bg-gray-400 text-white rounded px-3 py-1 hover:bg-gray-500"
-                          >
-                            Cancel
-                          </button>
+                        <td className="px-4 py-4">
+                          <div className="flex gap-2">
+                            <button type="button" onClick={saveEdit} className="bg-neutral-950 px-3 py-2 text-xs font-bold uppercase text-white">
+                              Save
+                            </button>
+                            <button type="button" onClick={() => setEditingProductId(null)} className="border border-neutral-950 px-3 py-2 text-xs font-bold uppercase">
+                              Cancel
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ) : (
-                      <tr key={product.productId}>
-                        <td className="border border-gray-300 px-2 py-1">{product.productId}</td>
-                        <td className="border border-gray-300 px-2 py-1">{product.name}</td>
-                        <td className="border border-gray-300 px-2 py-1">{product.category}</td>
-                        <td className="border border-gray-300 px-2 py-1">{product.price}</td>
-                        <td className="border border-gray-300 px-2 py-1">{product.sizes.join(', ')}</td>
-                        <td className="border border-gray-300 px-2 py-1">
-                          <img src={product.image} alt={product.name} className="h-10 w-10 object-cover" />
+                      <tr key={product.productId} className="border-b border-neutral-950/10">
+                        <td className="px-4 py-4 font-semibold">{product.productId}</td>
+                        <td className="px-4 py-4">
+                          <img src={product.image} alt={product.name} className="h-14 w-14 bg-[#f7f4ef] object-contain p-1" />
                         </td>
-                        <td className="border border-gray-300 px-2 py-1">{product.quantity}</td>
-                        <td className="border border-gray-300 px-2 py-1 space-x-2">
-                          <button
-                            onClick={() => startEditing(product)}
-                            className="bg-blue-600 text-white rounded px-2 py-1 hover:bg-blue-700"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(product.productId)}
-                            className="bg-red-600 text-white rounded px-2 py-1 hover:bg-red-700"
-                          >
-                            Delete
-                          </button>
+                        <td className="px-4 py-4 font-semibold">{product.name}</td>
+                        <td className="px-4 py-4">{product.year}</td>
+                        <td className="px-4 py-4 capitalize">{product.status}</td>
+                        <td className="px-4 py-4 capitalize">{product.category}</td>
+                        <td className="px-4 py-4">
+                          {product.status === MERCH_STATUS.ARCHIVED ? "-" : formatPrice(product.price)}
+                        </td>
+                        <td className="px-4 py-4">{product.status === MERCH_STATUS.ARCHIVED ? "-" : product.quantity}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => startEditing(product)} className="border border-neutral-950 px-3 py-2 text-xs font-bold uppercase">
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => handleDelete(product.productId)} className="bg-red-600 px-3 py-2 text-xs font-bold uppercase text-white">
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -439,72 +311,65 @@ function AdminDashboard() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
         )}
-        {activeTab === 'users' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">User Management</h2>
-            <table className="min-w-full border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-2 py-1">Name</th>
-                  <th className="border border-gray-300 px-2 py-1">Birthday</th>
-                  <th className="border border-gray-300 px-2 py-1">Mobile Number</th>
+
+        {activeTab === "users" && (
+          <section className="mt-8 overflow-auto bg-white">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-neutral-950 text-white">
+                <tr>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Birthday</th>
+                  <th className="px-4 py-3">Mobile</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user._id}>
-                    <td className="border border-gray-300 px-2 py-1">{user.name}</td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      {user.birthday ? new Date(user.birthday).toLocaleDateString() : ''}
-                    </td>
-                    <td className="border border-gray-300 px-2 py-1">{user.mobile || ''}</td>
+                  <tr key={user._id} className="border-b border-neutral-950/10">
+                    <td className="px-4 py-4">{user.name}</td>
+                    <td className="px-4 py-4">{user.birthday ? new Date(user.birthday).toLocaleDateString() : ""}</td>
+                    <td className="px-4 py-4">{user.mobile || ""}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </section>
         )}
-        {activeTab === 'orders' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Order Management</h2>
-            <table className="min-w-full border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-2 py-1">Order ID</th>
-                  <th className="border border-gray-300 px-2 py-1">User ID</th>
-                  <th className="border border-gray-300 px-2 py-1">Items</th>
-                  <th className="border border-gray-300 px-2 py-1">Total</th>
-                  <th className="border border-gray-300 px-2 py-1">Status</th>
-                  <th className="border border-gray-300 px-2 py-1">Created At</th>
+
+        {activeTab === "orders" && (
+          <section className="mt-8 overflow-auto bg-white">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-neutral-950 text-white">
+                <tr>
+                  <th className="px-4 py-3">Order</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Items</th>
+                  <th className="px-4 py-3">Total</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Created</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((order) => (
-                  <tr key={order._id}>
-                    <td className="border border-gray-300 px-2 py-1">{order._id}</td>
-                    <td className="border border-gray-300 px-2 py-1">{order.userId?.name || order.userId?.email || 'Unknown User'}</td>
-                    <td className="border border-gray-300 px-2 py-1">
+                  <tr key={order._id} className="border-b border-neutral-950/10 align-top">
+                    <td className="px-4 py-4">{order._id}</td>
+                    <td className="px-4 py-4">{order.userId?.name || order.userId?.email || "Unknown"}</td>
+                    <td className="px-4 py-4">
                       {order.items.map((item) => (
-                        <div key={item.productId}>
-                          {item.name} (Qty: {item.qty})
+                        <div key={`${order._id}-${item.productId}-${item.size || ""}`}>
+                          {item.name} x {item.qty}
                         </div>
                       ))}
                     </td>
-                    <td className="border border-gray-300 px-2 py-1">₱{order.total.toFixed(2)}</td>
-                    <td className="border border-gray-300 px-2 py-1">{order.status}</td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      {new Date(order.createdAt).toLocaleString()}
-                    </td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      {/* Accept Order button removed as per user request */}
-                    </td>
+                    <td className="px-4 py-4">{formatPrice(order.total)}</td>
+                    <td className="px-4 py-4">{order.status}</td>
+                    <td className="px-4 py-4">{new Date(order.createdAt).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </section>
         )}
       </div>
     </div>

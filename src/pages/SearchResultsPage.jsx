@@ -1,57 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-
-const products = [
-  {
-    id: 1,
-    name: "ICPEP ORG SHIRT – 2022",
-    price: 500,
-    image: "/images/product1.png",
-  },
-  {
-    id: 2,
-    name: "ICPEP ORG SHIRT – 2023",
-    price: 500,
-    image: "/images/product2.png",
-  },
-  {
-    id: 3,
-    name: "ICPEP ORG SHIRT – 2024",
-    price: 500,
-    image: "/images/product3.png",
-  },
-  {
-    id: 4,
-    name: "RELAXED PRINTED TEE – BLACK",
-    price: 250,
-    image: "/images/product4.png",
-  },
-  {
-    id: 5,
-    name: "ID LACE 2023",
-    price: 75,
-    image: "/images/product5.png",
-  },
-  {
-    id: 6,
-    name: "ID LACE 2024",
-    price: 75,
-    image: "/images/product6.png",
-  },
-  {
-    id: 7,
-    name: "TOTE BAGS",
-    price: 250,
-    image: "/images/product7.png",
-  },
-  {
-    id: 8,
-    name: "STICKERS",
-    price: 100,
-    image: "/images/product8.png",
-  },
-];
+import { MERCH_STATUS, formatPrice, getFallbackProducts } from "../data/merch";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -59,69 +9,85 @@ function useQuery() {
 
 export default function SearchResultsPage() {
   const { addToCart } = useCart();
-  const [addedProductId, setAddedProductId] = useState(null);
+  const [toast, setToast] = useState("");
   const query = useQuery();
   const searchTerm = query.get("q") || "";
 
   const filteredProducts = useMemo(() => {
     const lowerSearchTerm = searchTerm.toLowerCase();
-    return products.filter((product) =>
-      product.name.toLowerCase().includes(lowerSearchTerm)
+    return getFallbackProducts().filter((product) =>
+      `${product.name} ${product.year} ${product.category}`.toLowerCase().includes(lowerSearchTerm)
     );
   }, [searchTerm]);
 
+  const showToast = (message) => {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 1800);
+  };
+
   const handleAddToCart = (product) => {
-    addToCart(product);
-    setAddedProductId(product.id);
-    setTimeout(() => {
-      setAddedProductId(null);
-    }, 2000);
+    const oneSize = product.sizes.some((size) => size.toLowerCase() === "one size");
+    if (!oneSize && product.sizes.length > 0) {
+      showToast("Open the product to select a size.");
+      return;
+    }
+    addToCart({ ...product, qty: 1, size: oneSize ? "One Size" : "" });
+    showToast("Added to cart.");
   };
 
   return (
-    <div className="min-h-screen bg-white max-w-7xl mx-auto px-4 py-8 relative">
-      <h2 className="text-2xl font-semibold mb-6">
-        Search Results for "{searchTerm}"
-      </h2>
-      {filteredProducts.length === 0 ? (
-        <p>No products found.</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="text-center animate-slideUp bg-white rounded-lg shadow-md p-4 relative"
-            >
-              <a href={`/products/detail/${product.id}`}>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-auto object-cover mb-4 rounded"
-                />
-                <h3 className="text-sm font-semibold text-textPrimary">
-                  {product.name}
-                </h3>
-                <p className="text-sm text-textSecondary mb-2">₱ {product.price}</p>
-              </a>
-              <button
-                onClick={() => handleAddToCart(product)}
-                className="mt-2 bg-white text-black border border-black text-sm px-4 py-2 rounded hover:bg-blue-900 hover:text-white transition-colors relative"
-              >
-                Add to Cart
-              </button>
-            </div>
-            ))}
+    <div className="bg-[#f7f4ef] py-12">
+      <div className="page-shell">
+        <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Search</p>
+        <h1 className="mt-2 text-4xl font-black uppercase sm:text-6xl">"{searchTerm}"</h1>
+
+        {filteredProducts.length === 0 ? (
+          <div className="mt-10 border border-neutral-950/10 bg-white p-8 text-neutral-600">
+            No merch found for this search.
           </div>
-          {addedProductId && (
-            <div
-              className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm rounded px-4 py-2 shadow-lg animate-fadeInUp z-50"
-              style={{ animationDuration: '0.3s' }}
-            >
-              Added to cart
-            </div>
-          )}
-        </>
+        ) : (
+          <div className="mt-10 grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            {filteredProducts.map((product) => {
+              const isArchive = product.status === MERCH_STATUS.ARCHIVED;
+
+              return (
+                <article key={product.productId} className="group">
+                  <Link to={`/products/detail/${product.productId}`} className="block">
+                    <div className={`${isArchive ? "bg-neutral-200" : "product-media"} aspect-[4/5] overflow-hidden`}>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className={`h-full w-full object-contain p-6 transition duration-500 group-hover:scale-105 ${
+                          isArchive ? "grayscale" : ""
+                        }`}
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <h2 className="text-sm font-semibold uppercase tracking-[0.12em]">{product.name}</h2>
+                      <p className="mt-1 text-sm text-neutral-500">{product.year}</p>
+                      {!isArchive && <p className="mt-1 text-sm font-semibold">{formatPrice(product.price)}</p>}
+                    </div>
+                  </Link>
+                  {!isArchive && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCart(product)}
+                      className="mt-4 w-full bg-neutral-950 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-neutral-700"
+                    >
+                      Add to Cart
+                    </button>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 bg-neutral-950 px-5 py-3 text-sm font-semibold text-white shadow-xl">
+          {toast}
+        </div>
       )}
     </div>
   );

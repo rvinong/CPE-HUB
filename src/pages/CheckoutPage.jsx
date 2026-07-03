@@ -1,190 +1,158 @@
-import React, { useState } from 'react';
-import { useCart } from '../context/CartContext';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { MERCH_STATUS, formatPrice, normalizeMerch } from "../data/merch";
 
 const CheckoutPage = () => {
   const { cartItems, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
-  const handleCheckout = async () => {
-    if (cartItems.length === 0) return;
-    setLoading(true);
-    setMessage('');
+  const checkoutItems = useMemo(
+    () =>
+      cartItems
+        .map((item) => normalizeMerch(item))
+        .filter((item) => item.status !== MERCH_STATUS.ARCHIVED),
+    [cartItems]
+  );
 
-    const token = localStorage.getItem('token');
+  const total = checkoutItems.reduce((sum, item) => sum + item.price * Number(item.qty || 0), 0);
+
+  const handleCheckout = async () => {
+    if (checkoutItems.length === 0) return;
+    setLoading(true);
+    setMessage("");
+
+    const token = localStorage.getItem("token");
     if (!token) {
-      setMessage('Please log in to proceed with checkout.');
+      setMessage("Please log in to proceed with checkout.");
       setLoading(false);
       return;
     }
 
-    const total = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-
     try {
-      console.log('Sending order request to backend...');
-      const response = await fetch('http://localhost:5000/api/orders', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
         },
-        body: JSON.stringify({ items: cartItems, total }),
+        body: JSON.stringify({ items: checkoutItems, total }),
       });
 
       if (response.ok) {
-        setMessage('Order placed successfully! Redirecting to your account...');
+        setMessage("Order placed successfully. Redirecting to your account.");
         clearCart();
         setTimeout(() => {
-          navigate('/account?tab=orders');
-        }, 2000);
+          navigate("/account?tab=orders");
+        }, 1600);
       } else {
         const errorData = await response.json();
-        setMessage(`Failed to place order: ${errorData.message || 'Unknown error'}`);
+        setMessage(`Failed to place order: ${errorData.message || "Unknown error"}`);
       }
     } catch (error) {
-      console.error('Error placing order:', error);
-      setMessage(`Error placing order: ${error.message || 'Please try again later.'}`);
+      setMessage(`Error placing order: ${error.message || "Please try again later."}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <main className="flex-grow max-w-3xl mx-auto p-6 bg-white rounded shadow mt-10">
-        <h1 className="text-3xl font-bold mb-6 text-center">Checkout</h1>
-        {/* Contact Section */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Contact</h2>
-          <form className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-            <label className="inline-flex items-center">
-              <input type="checkbox" className="form-checkbox" defaultChecked />
-              <span className="ml-2">Email me with news and offers</span>
-            </label>
-          </form>
-        </section>
-
-        {/* Delivery Section */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Delivery</h2>
-          <form className="space-y-4">
-            <select className="w-full border border-gray-300 rounded px-3 py-2" defaultValue="Philippines">
-              <option>Philippines</option>
-              {/* Add other countries as needed */}
-            </select>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="First name"
-                className="border border-gray-300 rounded px-3 py-2"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Last name"
-                className="border border-gray-300 rounded px-3 py-2"
-                required
-              />
-            </div>
-            <input
-              type="text"
-              placeholder="IMPORTANT: Please input FULL Address (Block and Lot#)"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Barangay / Apartment, Suite, etc."
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="text"
-              placeholder="City"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Province"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Zip code"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-            <input
-              type="tel"
-              placeholder="Phone"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-          </form>
-        </section>
-
-        {/* Order Summary Section */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-        {cartItems.length === 0 ? (
-            <p className="text-gray-700">Your cart is empty.</p>
-          ) : (
-            <>
-            <ul className="divide-y divide-gray-200">
-              {cartItems.map((item) => (
-                <li key={item.productId + (item.size || '')} className="py-2 flex justify-between items-center">
-                  <div className="flex items-center space-x-4">
-                    {item.image && (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    )}
-                    <div>
-                      <p className="font-semibold">{item.name}</p>
-                      {item.size && <p className="text-sm text-gray-500">Size: {item.size}</p>}
-                      <p className="text-sm text-gray-500">Quantity: {item.qty}</p>
-                    </div>
-                  </div>
-                  <div className="font-semibold">₱{(item.price * item.qty).toFixed(2)}</div>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 text-right font-bold text-lg">
-              Total: ₱{cartItems.reduce((total, item) => total + item.price * item.qty, 0).toFixed(2)}
-            </div>
-            </>
-          )}
-          <div className="mt-6 text-center">
-            <button
-              onClick={handleCheckout}
-              className="bg-black text-white px-6 py-3 rounded hover:bg-gray-800 transition-colors"
-              disabled={cartItems.length === 0 || loading}
-            >
-              {loading ? 'Processing...' : 'Place the Order'}
-            </button>
-          </div>
-          {message && (
-            <p className="mt-4 text-center text-sm text-red-600">{message}</p>
-          )}
-        </section>
-
-        {/* Back to site link */}
-        <div className="mt-8 text-center">
-          <a href="/" className="text-primary hover:underline">
-            &larr; Back to CPE HUB
-          </a>
+    <div className="min-h-screen bg-[#f7f4ef]">
+      <header className="border-b border-neutral-950 bg-white">
+        <div className="page-shell flex min-h-[72px] items-center justify-between">
+          <Link to="/" className="text-xl font-black uppercase tracking-[0.18em]">
+            CPE HUB
+          </Link>
+          <Link to="/products" className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-600">
+            Continue Shopping
+          </Link>
         </div>
+      </header>
+
+      <main className="page-shell grid gap-8 py-10 lg:grid-cols-[1fr_420px]">
+        <section className="bg-white p-6 sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Checkout</p>
+          <h1 className="mt-2 text-4xl font-black uppercase">Order Details</h1>
+
+          <div className="mt-8 grid gap-8">
+            <section>
+              <h2 className="text-sm font-black uppercase tracking-[0.18em]">Contact</h2>
+              <div className="mt-4 grid gap-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950"
+                  required
+                />
+                <label className="flex items-center gap-3 text-sm text-neutral-600">
+                  <input type="checkbox" className="h-4 w-4" defaultChecked />
+                  Email me with updates about this merch release
+                </label>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-black uppercase tracking-[0.18em]">Delivery</h2>
+              <div className="mt-4 grid gap-4">
+                <select className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" defaultValue="Philippines">
+                  <option>Philippines</option>
+                </select>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <input type="text" placeholder="First name" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                  <input type="text" placeholder="Last name" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                </div>
+                <input type="text" placeholder="Full address" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                <input type="text" placeholder="Barangay / apartment / suite" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" />
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <input type="text" placeholder="City" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                  <input type="text" placeholder="Province" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                  <input type="text" placeholder="Zip code" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                </div>
+                <input type="tel" placeholder="Phone" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <aside className="h-fit bg-neutral-950 p-6 text-white lg:sticky lg:top-8">
+          <h2 className="text-sm font-black uppercase tracking-[0.18em]">Order Summary</h2>
+          {checkoutItems.length === 0 ? (
+            <p className="mt-8 text-sm text-white/65">Your cart is empty.</p>
+          ) : (
+            <div className="mt-6 divide-y divide-white/15">
+              {checkoutItems.map((item) => (
+                <div key={item.id || `${item.productId}-${item.size || ""}`} className="flex gap-4 py-4">
+                  <img src={item.image} alt={item.name} className="h-16 w-16 bg-white object-contain p-1" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold uppercase tracking-[0.12em]">{item.name}</p>
+                    <p className="mt-1 text-xs text-white/60">
+                      {item.size ? `Size: ${item.size} / ` : ""}Qty: {item.qty}
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold">{formatPrice(item.price * item.qty)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-6 border-t border-white/20 pt-5">
+            <div className="flex justify-between text-lg font-black uppercase">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCheckout}
+              disabled={checkoutItems.length === 0 || loading}
+              className="mt-6 w-full bg-white px-5 py-4 text-xs font-bold uppercase tracking-[0.2em] text-neutral-950 transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {loading ? "Processing" : "Place Order"}
+            </button>
+            {message && <p className="mt-4 text-sm text-white/75">{message}</p>}
+          </div>
+        </aside>
       </main>
     </div>
   );
