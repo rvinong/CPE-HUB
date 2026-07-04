@@ -94,6 +94,21 @@ function AdminDashboard() {
     [products]
   );
 
+  const adminStats = useMemo(() => {
+    const availableCount = normalizedProducts.filter((product) => product.status === MERCH_STATUS.AVAILABLE).length;
+    const archiveCount = normalizedProducts.filter((product) => product.status === MERCH_STATUS.ARCHIVED).length;
+    const lowStockCount = normalizedProducts.filter(
+      (product) => product.status === MERCH_STATUS.AVAILABLE && product.quantity > 0 && product.quantity <= 10
+    ).length;
+
+    return [
+      ["Current merch", availableCount],
+      ["Archive records", archiveCount],
+      ["Low stock", lowStockCount],
+      ["Orders loaded", orders.length],
+    ];
+  }, [normalizedProducts, orders.length]);
+
   useEffect(() => {
     let intervalId;
     if (activeTab === "products") {
@@ -234,6 +249,15 @@ function AdminDashboard() {
         <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Admin</p>
         <h1 className="mt-2 text-4xl font-black uppercase">Dashboard</h1>
 
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {adminStats.map(([label, value]) => (
+            <div key={label} className="admin-stat">
+              <p className="section-kicker">{label}</p>
+              <p className="mt-3 text-3xl font-black">{value}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="strong-divider mt-8 flex flex-wrap gap-2 border-b">
           {[
             ["products", "Products"],
@@ -327,12 +351,22 @@ function AdminDashboard() {
                         </td>
                         <td className="px-4 py-4 font-semibold">{product.name}</td>
                         <td className="px-4 py-4">{product.year}</td>
-                        <td className="px-4 py-4 capitalize">{product.status}</td>
+                        <td className="px-4 py-4 capitalize">
+                          <span className={`status-pill ${product.status === MERCH_STATUS.ARCHIVED ? "status-pill-muted" : "status-pill-stock"}`}>
+                            {product.status}
+                          </span>
+                        </td>
                         <td className="px-4 py-4 capitalize">{product.category}</td>
                         <td className="px-4 py-4">
                           {product.status === MERCH_STATUS.ARCHIVED ? "-" : formatPrice(product.price)}
                         </td>
-                        <td className="px-4 py-4">{product.status === MERCH_STATUS.ARCHIVED ? "-" : product.quantity}</td>
+                        <td className="px-4 py-4">
+                          {product.status === MERCH_STATUS.ARCHIVED ? "-" : (
+                            <span className={`status-pill ${product.quantity <= 10 ? "status-pill-warning" : "status-pill-stock"}`}>
+                              {product.quantity}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">
                             <button type="button" onClick={() => startEditing(product)} className="ui-button-secondary px-3 py-2">
@@ -401,7 +435,9 @@ function AdminDashboard() {
                       ))}
                     </td>
                     <td className="px-4 py-4">{formatPrice(order.total)}</td>
-                    <td className="px-4 py-4">{order.status}</td>
+                    <td className="px-4 py-4">
+                      <span className="status-pill status-pill-muted">{order.status}</span>
+                    </td>
                     <td className="px-4 py-4">{new Date(order.createdAt).toLocaleString()}</td>
                   </tr>
                 ))}

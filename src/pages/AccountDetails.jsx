@@ -27,7 +27,12 @@ const AccountDetails = () => {
   }
 
   return (
-    <div className="surface-panel mx-auto mt-10 max-w-4xl p-6">
+    <div className="page-shell py-10">
+    <div className="surface-panel mx-auto max-w-4xl p-6">
+      <div className="mb-6">
+        <p className="section-kicker">Account</p>
+        <h1 className="mt-2 text-3xl font-black uppercase">Details</h1>
+      </div>
       <div className="token-divider mb-6 flex items-center justify-between border-b">
         <div>
           <button
@@ -58,6 +63,7 @@ const AccountDetails = () => {
         {activeTab === 'orders' && <Orders />}
         {activeTab === 'addresses' && <Addresses />}
       </div>
+    </div>
     </div>
   );
 };

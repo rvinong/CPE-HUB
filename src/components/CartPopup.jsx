@@ -4,9 +4,16 @@ import { formatPrice } from "../data/merch";
 
 function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
   const total = cartItems.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0);
+  const totalQty = cartItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
   const navigate = useNavigate();
 
+  const handleBrowse = () => {
+    onClose();
+    navigate("/products");
+  };
+
   const handleCheckout = () => {
+    onClose();
     navigate("/checkout");
   };
 
@@ -20,7 +27,10 @@ function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
       />
       <aside className="drawer-panel absolute right-0 top-0 flex h-full w-full max-w-md flex-col">
         <div className="strong-divider flex items-center justify-between border-b px-6 py-5">
-          <h2 className="text-2xl font-black uppercase tracking-normal">Cart</h2>
+          <div>
+            <p className="section-kicker">Order Preview</p>
+            <h2 className="mt-1 text-2xl font-black uppercase tracking-normal">Cart</h2>
+          </div>
           <button
             type="button"
             className="icon-button grid h-10 w-10 place-items-center text-2xl leading-none"
@@ -34,13 +44,17 @@ function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
         {cartItems.length === 0 ? (
           <div className="grid flex-1 place-items-center px-6 text-center">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-neutral-500">No items yet</p>
+              <p className="section-kicker">No items yet</p>
+              <h3 className="mt-3 text-3xl font-black uppercase">Build your drop</h3>
+              <p className="body-copy mt-3 max-w-xs">
+                Add current merch to checkout. Archive pieces stay view-only.
+              </p>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleBrowse}
                 className="ui-button-primary mt-5 px-5 py-3"
               >
-                Continue Shopping
+                Browse Merch
               </button>
             </div>
           </div>
@@ -85,8 +99,12 @@ function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
             </div>
 
             <div className="summary-panel border-t px-6 py-5">
+              <div className="mb-4 flex items-center justify-between text-sm font-bold uppercase tracking-[0.16em] text-neutral-500">
+                <span>{totalQty} item{totalQty === 1 ? "" : "s"}</span>
+                <span>Subtotal</span>
+              </div>
               <div className="mb-5 flex items-center justify-between text-lg font-black uppercase">
-                <span>Total</span>
+                <span>Total due</span>
                 <span>{formatPrice(total)}</span>
               </div>
               <button

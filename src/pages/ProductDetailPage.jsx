@@ -12,7 +12,7 @@ import {
 export default function ProductDetailPage() {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, openCart } = useCart();
   const [product, setProduct] = useState(getProductFromFallback(productId));
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -49,6 +49,18 @@ export default function ProductDetailPage() {
       : [product.image || "/images/product1.png"];
   }, [product]);
 
+  useEffect(() => {
+    setSelectedImageIndex(0);
+    setSelectedSize("");
+    setQuantity(1);
+  }, [product?.productId]);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timeoutId = window.setTimeout(() => setToast(""), 1800);
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
   if (loading && !product) {
     return (
       <div className="page-shell grid min-h-[60vh] place-items-center">
@@ -72,13 +84,20 @@ export default function ProductDetailPage() {
 
   const isArchived = product.status === MERCH_STATUS.ARCHIVED;
   const oneSize = product.sizes.some((size) => size.toLowerCase() === "one size");
+  const isLowStock = product.quantity > 0 && product.quantity <= 10;
+  const isSoldOut = product.quantity <= 0;
+  const stockLabel = isSoldOut ? "Sold out" : isLowStock ? `${product.quantity} left` : "In stock";
 
   const showToast = (message) => {
     setToast(message);
-    window.setTimeout(() => setToast(""), 1800);
   };
 
   const handleAddToCart = () => {
+    if (isSoldOut) {
+      showToast("This item is sold out.");
+      return;
+    }
+
     const size = oneSize ? "One Size" : selectedSize;
     if (!size && product.sizes.length > 0) {
       showToast("Select a size first.");
@@ -92,6 +111,7 @@ export default function ProductDetailPage() {
       image: images[selectedImageIndex] || product.image,
     });
     showToast("Added to cart.");
+    openCart();
   };
 
   return (
@@ -115,8 +135,15 @@ export default function ProductDetailPage() {
               />
             </div>
             <div>
+              <span className="status-pill status-pill-muted">Archive only</span>
               <h1 className="text-4xl font-black uppercase leading-none sm:text-6xl">{product.name}</h1>
               <p className="mt-4 text-lg font-semibold uppercase tracking-[0.2em] text-neutral-500">{product.year}</p>
+              <div className="soft-panel mt-8 p-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em]">Past release record</p>
+                <p className="body-copy mt-3 text-sm">
+                  Archived merch is shown as photo, name, and year only. It is not available for checkout.
+                </p>
+              </div>
             </div>
           </section>
         ) : (
@@ -150,12 +177,20 @@ export default function ProductDetailPage() {
             <div className="lg:pt-10">
               <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">{product.year} Drop</p>
               <h1 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">{product.name}</h1>
-              <p className="mt-5 text-xl font-semibold">{formatPrice(product.price)}</p>
-              {product.description && <p className="mt-5 max-w-xl leading-7 text-neutral-600">{product.description}</p>}
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <p className="text-xl font-semibold">{formatPrice(product.price)}</p>
+                <span className={`status-pill ${isLowStock || isSoldOut ? "status-pill-warning" : "status-pill-stock"}`}>
+                  {stockLabel}
+                </span>
+              </div>
+              {product.description && <p className="body-copy mt-5 max-w-xl">{product.description}</p>}
 
               {!oneSize && product.sizes.length > 0 && (
                 <div className="mt-8">
-                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em]">Size</p>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em]">Size</p>
+                    {!selectedSize && <p className="text-xs font-semibold text-neutral-500">Select one</p>}
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {product.sizes.map((size) => (
                       <button
@@ -181,6 +216,7 @@ export default function ProductDetailPage() {
                   <button
                     type="button"
                     onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                    disabled={quantity <= 1}
                     className="grid w-12 place-items-center text-xl"
                   >
                     -
@@ -188,7 +224,8 @@ export default function ProductDetailPage() {
                   <span className="grid flex-1 place-items-center text-sm font-bold">{quantity}</span>
                   <button
                     type="button"
-                    onClick={() => setQuantity((value) => value + 1)}
+                    onClick={() => setQuantity((value) => Math.min(product.quantity, value + 1))}
+                    disabled={quantity >= product.quantity}
                     className="grid w-12 place-items-center text-xl"
                   >
                     +
@@ -199,10 +236,26 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 onClick={handleAddToCart}
+                disabled={isSoldOut}
                 className="ui-button-primary mt-8 w-full px-6 py-4"
               >
-                Add to Cart
+                {isSoldOut ? "Unavailable" : "Add to Cart"}
               </button>
+
+              <div className="soft-panel mt-6 grid gap-4 p-5 text-sm sm:grid-cols-3">
+                <div>
+                  <p className="font-black uppercase tracking-[0.14em]">Drop</p>
+                  <p className="body-copy mt-1">{product.year}</p>
+                </div>
+                <div>
+                  <p className="font-black uppercase tracking-[0.14em]">Type</p>
+                  <p className="body-copy mt-1 capitalize">{product.category}</p>
+                </div>
+                <div>
+                  <p className="font-black uppercase tracking-[0.14em]">Availability</p>
+                  <p className="body-copy mt-1">{stockLabel}</p>
+                </div>
+              </div>
             </div>
           </section>
         )}

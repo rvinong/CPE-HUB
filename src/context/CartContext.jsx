@@ -6,6 +6,11 @@ const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
 
 const CART_STORAGE_KEY = "cartItems";
+const capCartQty = (qty, stock) => {
+  const requestedQty = Number(qty || 1);
+  const availableStock = Number(stock || 0);
+  return availableStock > 0 ? Math.min(availableStock, requestedQty) : requestedQty;
+};
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => {
@@ -37,10 +42,15 @@ export const CartProvider = ({ children }) => {
       const existingItem = prevItems.find((item) => item.id === id);
       if (existingItem) {
         return prevItems.map((item) =>
-          item.id === id ? { ...item, qty: Number(item.qty || 0) + normalizedProduct.qty } : item
+          item.id === id
+            ? {
+                ...item,
+                qty: capCartQty(Number(item.qty || 0) + normalizedProduct.qty, normalizedProduct.quantity),
+              }
+            : item
         );
       }
-      return [...prevItems, { ...normalizedProduct, id }];
+      return [...prevItems, { ...normalizedProduct, qty: capCartQty(normalizedProduct.qty, normalizedProduct.quantity), id }];
     });
   };
 
@@ -50,11 +60,23 @@ export const CartProvider = ({ children }) => {
 
   const updateQty = (id, qty) => {
     if (qty < 1) return;
-    setCartItems((prevItems) => prevItems.map((item) => (item.id === id ? { ...item, qty } : item)));
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id ? { ...item, qty: capCartQty(qty, item.quantity) } : item
+      )
+    );
   };
 
   const toggleCart = () => {
     setIsCartOpen((open) => !open);
+  };
+
+  const closeCart = () => {
+    setIsCartOpen(false);
+  };
+
+  const openCart = () => {
+    setIsCartOpen(true);
   };
 
   const clearCart = () => {
@@ -62,7 +84,9 @@ export const CartProvider = ({ children }) => {
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQty, isCartOpen, toggleCart, clearCart }}>
+    <CartContext.Provider
+      value={{ cartItems, addToCart, removeFromCart, updateQty, isCartOpen, toggleCart, closeCart, openCart, clearCart }}
+    >
       {children}
     </CartContext.Provider>
   );

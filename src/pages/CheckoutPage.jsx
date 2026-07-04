@@ -62,19 +62,27 @@ const CheckoutPage = () => {
 
       <main className="page-shell grid gap-8 py-10 lg:grid-cols-[1fr_420px]">
         <section className="surface-panel p-6 sm:p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Checkout</p>
+          <p className="section-kicker">Checkout</p>
           <h1 className="mt-2 text-4xl font-black uppercase">Order Details</h1>
+          <div className="soft-panel mt-6 p-4">
+            <p className="text-sm font-semibold">
+              Checkout is for current merch only. Archive items are preserved as records and stay out of orders.
+            </p>
+          </div>
 
           <div className="mt-8 grid gap-8">
-            <section>
+            <section className="checkout-step">
               <h2 className="text-sm font-black uppercase tracking-[0.18em]">Contact</h2>
               <div className="mt-4 grid gap-4">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="ui-input h-12 px-3"
-                  required
-                />
+                <label className="field-label">
+                  Email
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    className="ui-input h-12 px-3 normal-case tracking-normal"
+                    required
+                  />
+                </label>
                 <label className="flex items-center gap-3 text-sm text-neutral-600">
                   <input type="checkbox" className="h-4 w-4" defaultChecked />
                   Email me with updates about this merch release
@@ -82,24 +90,51 @@ const CheckoutPage = () => {
               </div>
             </section>
 
-            <section>
+            <section className="checkout-step">
               <h2 className="text-sm font-black uppercase tracking-[0.18em]">Delivery</h2>
               <div className="mt-4 grid gap-4">
-                <select className="ui-select h-12 px-3" defaultValue="Philippines">
-                  <option>Philippines</option>
-                </select>
+                <label className="field-label">
+                  Country
+                  <select className="ui-select h-12 px-3 normal-case tracking-normal" defaultValue="Philippines">
+                    <option>Philippines</option>
+                  </select>
+                </label>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <input type="text" placeholder="First name" className="ui-input h-12 px-3" required />
-                  <input type="text" placeholder="Last name" className="ui-input h-12 px-3" required />
+                  <label className="field-label">
+                    First Name
+                    <input type="text" placeholder="First name" className="ui-input h-12 px-3 normal-case tracking-normal" required />
+                  </label>
+                  <label className="field-label">
+                    Last Name
+                    <input type="text" placeholder="Last name" className="ui-input h-12 px-3 normal-case tracking-normal" required />
+                  </label>
                 </div>
-                <input type="text" placeholder="Full address" className="ui-input h-12 px-3" required />
-                <input type="text" placeholder="Barangay / apartment / suite" className="ui-input h-12 px-3" />
+                <label className="field-label">
+                  Full Address
+                  <input type="text" placeholder="Street and house number" className="ui-input h-12 px-3 normal-case tracking-normal" required />
+                </label>
+                <label className="field-label">
+                  Barangay / Apartment
+                  <input type="text" placeholder="Barangay / apartment / suite" className="ui-input h-12 px-3 normal-case tracking-normal" />
+                </label>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <input type="text" placeholder="City" className="ui-input h-12 px-3" required />
-                  <input type="text" placeholder="Province" className="ui-input h-12 px-3" required />
-                  <input type="text" placeholder="Zip code" className="ui-input h-12 px-3" required />
+                  <label className="field-label">
+                    City
+                    <input type="text" placeholder="City" className="ui-input h-12 px-3 normal-case tracking-normal" required />
+                  </label>
+                  <label className="field-label">
+                    Province
+                    <input type="text" placeholder="Province" className="ui-input h-12 px-3 normal-case tracking-normal" required />
+                  </label>
+                  <label className="field-label">
+                    Zip Code
+                    <input type="text" placeholder="Zip code" className="ui-input h-12 px-3 normal-case tracking-normal" required />
+                  </label>
                 </div>
-                <input type="tel" placeholder="Phone" className="ui-input h-12 px-3" required />
+                <label className="field-label">
+                  Phone
+                  <input type="tel" placeholder="Phone number" className="ui-input h-12 px-3 normal-case tracking-normal" required />
+                </label>
               </div>
             </section>
           </div>
@@ -108,7 +143,12 @@ const CheckoutPage = () => {
         <aside className="dark-panel h-fit p-6 lg:sticky lg:top-8">
           <h2 className="text-sm font-black uppercase tracking-[0.18em]">Order Summary</h2>
           {checkoutItems.length === 0 ? (
-            <p className="mt-8 text-sm text-white/65">Your cart is empty.</p>
+            <div className="mt-8">
+              <p className="text-sm text-white/65">Your cart is empty.</p>
+              <Link to="/products" className="ui-button-secondary mt-5 w-full px-5 py-4">
+                Browse Merch
+              </Link>
+            </div>
           ) : (
             <div className="mt-6 divide-y divide-white/15">
               {checkoutItems.map((item) => (
@@ -140,6 +180,11 @@ const CheckoutPage = () => {
               {loading ? "Processing" : "Place Order"}
             </button>
             {message && <p className="mt-4 text-sm text-white/75">{message}</p>}
+            {!isAuthenticated && checkoutItems.length > 0 && (
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                Login required before placing an order
+              </p>
+            )}
           </div>
         </aside>
       </main>

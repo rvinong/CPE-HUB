@@ -19,21 +19,28 @@ const categoryFilters = [
 
 function ProductCard({ product, selectedSize, onSelectSize, onAddToCart }) {
   const oneSize = product.sizes.some((size) => size.toLowerCase() === "one size");
+  const isLowStock = product.quantity > 0 && product.quantity <= 10;
+  const isSoldOut = product.quantity <= 0;
+  const stockLabel = isSoldOut ? "Sold out" : isLowStock ? `${product.quantity} left` : "In stock";
 
   return (
-    <article className="interactive-card group">
+    <article className="product-card interactive-card group">
       <Link to={`/products/detail/${product.productId}`} className="block">
-        <div className="product-media aspect-[4/5] overflow-hidden">
+        <div className="product-media relative aspect-[4/5] overflow-hidden">
+          <span className={`status-pill absolute left-4 top-4 z-10 ${isLowStock || isSoldOut ? "status-pill-warning" : "status-pill-stock"}`}>
+            {stockLabel}
+          </span>
           <img
             src={product.image}
             alt={product.name}
-            className="h-full w-full object-contain p-6 transition duration-500 group-hover:scale-105"
+            className="h-full w-full object-contain p-7 transition duration-500 group-hover:scale-105"
           />
         </div>
-        <div className="mt-4 flex items-start justify-between gap-4 text-sm">
-          <div>
-            <h2 className="font-semibold uppercase tracking-[0.12em] text-neutral-950">{product.name}</h2>
-            <p className="mt-1 text-neutral-500">{product.year} Drop</p>
+        <div className="product-card-meta flex items-start justify-between gap-4 text-sm">
+          <div className="min-w-0">
+            <p className="section-kicker">{product.year} Drop</p>
+            <h2 className="mt-2 font-semibold uppercase tracking-[0.12em] text-neutral-950">{product.name}</h2>
+            <p className="mt-3 text-action inline-flex">Details</p>
           </div>
           <p className="whitespace-nowrap font-semibold">{formatPrice(product.price)}</p>
         </div>
@@ -61,9 +68,10 @@ function ProductCard({ product, selectedSize, onSelectSize, onAddToCart }) {
       <button
         type="button"
         onClick={() => onAddToCart(product)}
-        className="ui-button-primary mt-4 w-full px-4 py-3"
+        disabled={isSoldOut}
+        className="ui-button-primary mt-1 w-full px-4 py-3"
       >
-        Add to Cart
+        {isSoldOut ? "Unavailable" : oneSize ? "Add to Cart" : "Add Selected Size"}
       </button>
     </article>
   );
@@ -79,16 +87,18 @@ function ArchiveCard({ product }) {
           className="h-full w-full object-contain p-6 grayscale transition duration-500 group-hover:grayscale-0"
         />
       </div>
-      <div className="mt-3 flex items-start justify-between gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.14em]">{product.name}</h2>
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">{product.year}</p>
+      <div className="product-card-meta mt-3 flex items-start justify-between gap-4">
+        <div>
+          <span className="status-pill status-pill-muted">{product.year}</span>
+          <h2 className="mt-3 text-sm font-semibold uppercase tracking-[0.14em]">{product.name}</h2>
+        </div>
       </div>
     </Link>
   );
 }
 
 export default function ProductPage() {
-  const { addToCart } = useCart();
+  const { addToCart, openCart } = useCart();
   const { category } = useParams();
   const location = useLocation();
   const [products, setProducts] = useState(getFallbackProducts());
@@ -154,14 +164,24 @@ export default function ProductPage() {
     setSelectedSizes((prev) => ({ ...prev, [productId]: size }));
   };
 
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timeoutId = window.setTimeout(() => setToast(""), 1800);
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
   const showToast = (message) => {
     setToast(message);
-    window.setTimeout(() => setToast(""), 1800);
   };
 
   const handleAddToCart = (product) => {
     const oneSize = product.sizes.some((size) => size.toLowerCase() === "one size");
     const selectedSize = oneSize ? "One Size" : selectedSizes[product.productId];
+
+    if (product.quantity <= 0) {
+      showToast("This item is sold out.");
+      return;
+    }
 
     if (!selectedSize && product.sizes.length > 0) {
       showToast("Select a size first.");
@@ -170,6 +190,7 @@ export default function ProductPage() {
 
     addToCart({ ...product, qty: 1, size: selectedSize || "" });
     showToast("Added to cart.");
+    openCart();
   };
 
   return (
@@ -182,17 +203,24 @@ export default function ProductPage() {
               <h1 className="text-4xl font-black uppercase leading-none sm:text-6xl">
                 {archiveOnly ? "Archive" : "Shop"}
               </h1>
-              <p className="mt-4 max-w-2xl text-neutral-600">
+              <p className="body-copy mt-4 max-w-2xl">
                 {archiveOnly
                   ? "Past releases are preserved as a lookbook with photo, name, and year only."
                   : "Available now. Archive below."}
               </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <span className="status-pill status-pill-stock">{availableProducts.length} current</span>
+                <span className="status-pill status-pill-muted">{archiveProducts.length} archived</span>
+                {!archiveOnly && normalizedCategory !== "all" && (
+                  <span className="status-pill status-pill-muted">{normalizedCategory}</span>
+                )}
+              </div>
             </div>
             {!archiveOnly && (
               <select
                 value={sortOption}
                 onChange={(event) => setSortOption(event.target.value)}
-                className="mobile-safe-width ui-select h-11 px-3 text-sm font-medium sm:w-auto"
+                className="ui-select h-11 w-full px-3 text-sm font-medium sm:w-auto"
               >
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
@@ -206,7 +234,7 @@ export default function ProductPage() {
       {!archiveOnly && (
         <section className="page-shell py-12 sm:py-16">
           <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="mobile-safe-width grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               {categoryFilters.map((filter) => (
                 <Link
                   key={filter.value}
@@ -231,11 +259,14 @@ export default function ProductPage() {
           {loading ? (
             <div className="skeleton-block min-h-[320px] animate-pulse" />
           ) : availableProducts.length === 0 ? (
-            <div className="surface-panel p-8 text-neutral-600">
-              No current merch found for this category.
+            <div className="empty-state surface-panel p-8 text-neutral-600">
+              <div>
+                <h2 className="text-2xl font-black uppercase text-neutral-950">Nothing in this rack</h2>
+                <p className="body-copy mt-3">No current merch is available for this category yet.</p>
+              </div>
             </div>
           ) : (
-            <div className="mobile-safe-width grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
               {availableProducts.map((product) => (
                 <ProductCard
                   key={product.productId}
@@ -254,17 +285,17 @@ export default function ProductPage() {
         <div className={archiveOnly ? "" : "page-shell"}>
           <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Photo, Name, Year</p>
-              <h2 className="mt-2 text-3xl font-black uppercase sm:text-5xl">Archive</h2>
+              <p className="section-kicker">Photo, Name, Year</p>
+              <h2 className="section-title mt-2">Archive</h2>
             </div>
             {archiveOnly && (
-              <Link to="/products" className="text-xs font-bold uppercase tracking-[0.22em] underline underline-offset-4">
+              <Link to="/products" className="text-action">
                 Back to shop
               </Link>
             )}
           </div>
 
-          <div className="mobile-safe-width grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {archiveProducts.map((product) => (
               <ArchiveCard key={product.productId} product={product} />
             ))}

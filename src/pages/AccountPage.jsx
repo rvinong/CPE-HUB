@@ -38,7 +38,12 @@ export default function AccountPage() {
 
   if (isAuthenticated) {
     return (
-      <div className="surface-panel mx-auto mt-10 max-w-4xl p-6">
+      <div className="page-shell py-10">
+      <div className="surface-panel mx-auto max-w-4xl p-6">
+        <div className="mb-6">
+          <p className="section-kicker">Account</p>
+          <h1 className="mt-2 text-3xl font-black uppercase">Your Orders</h1>
+        </div>
         <div className="token-divider mb-6 flex items-center justify-between border-b">
           <div>
             <button
@@ -70,14 +75,17 @@ export default function AccountPage() {
           {activeTab === 'addresses' && <Addresses />}
         </div>
       </div>
+      </div>
     );
   }
 
   return (
     <div className="app-canvas flex min-h-screen flex-col items-center justify-center p-4">
-      <h1 className="mb-10 text-center text-4xl font-extrabold">
-        {showLogin ? "Login" : "Sign Up"}
-      </h1>
+      <div className="mb-8 text-center">
+        <p className="section-kicker">Account</p>
+        <h1 className="mt-2 text-4xl font-extrabold uppercase">{showLogin ? "Log In" : "Sign Up"}</h1>
+        <p className="body-copy mt-3 max-w-md">Track orders, keep addresses ready, and manage CPE merch checkout.</p>
+      </div>
       <div className="surface-panel w-full max-w-md p-8">
         {showLogin ? (
           <>

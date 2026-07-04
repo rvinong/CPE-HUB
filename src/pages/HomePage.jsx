@@ -6,27 +6,35 @@ import { MERCH_STATUS, formatPrice, getFallbackProducts } from "../data/merch";
 const products = getFallbackProducts();
 const availableProducts = products.filter((product) => product.status === MERCH_STATUS.AVAILABLE);
 const archiveProducts = products.filter((product) => product.status === MERCH_STATUS.ARCHIVED);
+const currentDropYear = Math.max(...availableProducts.map((product) => product.year));
+const archiveYears = [...new Set(archiveProducts.map((product) => product.year))].sort((a, b) => b - a);
 
 const categoryTiles = [
-  { label: "Shirts", path: "/products/tshirt", image: "/images/product3.png" },
-  { label: "Laces", path: "/products/lace", image: "/images/product6.png" },
-  { label: "Essentials", path: "/products/essential", image: "/images/product8.png" },
+  { label: "Shirts", value: "tshirt", path: "/products/tshirt", image: "/images/product3.png" },
+  { label: "Laces", value: "lace", path: "/products/lace", image: "/images/product6.png" },
+  { label: "Essentials", value: "essential", path: "/products/essential", image: "/images/product8.png" },
 ];
 
 function ProductCard({ product }) {
+  const stockLabel = product.quantity <= 10 ? `${product.quantity} left` : "In stock";
+
   return (
-    <Link to={`/products/detail/${product.productId}`} className="interactive-card group block">
-      <div className="product-media aspect-[4/5] overflow-hidden">
+    <Link to={`/products/detail/${product.productId}`} className="product-card interactive-card group block">
+      <div className="product-media relative aspect-[4/5] overflow-hidden">
+        <span className={`status-pill absolute left-4 top-4 z-10 ${product.quantity <= 10 ? "status-pill-warning" : "status-pill-stock"}`}>
+          {stockLabel}
+        </span>
         <img
           src={product.image}
           alt={product.name}
-          className="h-full w-full object-contain p-6 transition duration-500 group-hover:scale-105"
+          className="h-full w-full object-contain p-7 transition duration-500 group-hover:scale-105"
         />
       </div>
-      <div className="mt-4 flex items-start justify-between gap-4 text-sm">
-        <div>
-          <h3 className="font-semibold uppercase tracking-[0.12em] text-neutral-950">{product.name}</h3>
-          <p className="mt-1 text-neutral-500">{product.year} Drop</p>
+      <div className="product-card-meta flex items-start justify-between gap-4 text-sm">
+        <div className="min-w-0">
+          <p className="section-kicker">{product.year} Drop</p>
+          <h3 className="mt-2 font-semibold uppercase tracking-[0.12em] text-neutral-950">{product.name}</h3>
+          <p className="mt-3 text-action inline-flex">View details</p>
         </div>
         <p className="whitespace-nowrap font-semibold">{formatPrice(product.price)}</p>
       </div>
@@ -36,17 +44,18 @@ function ProductCard({ product }) {
 
 function ArchiveCard({ product }) {
   return (
-    <Link to={`/products/detail/${product.productId}`} className="interactive-card group block">
+    <Link to={`/products/detail/${product.productId}`} className="product-card interactive-card group block">
       <div className="archive-media aspect-[3/4] overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
-          className="h-full w-full object-contain p-6 grayscale transition duration-500 group-hover:grayscale-0"
+          className="h-full w-full object-contain p-7 grayscale transition duration-500 group-hover:grayscale-0"
         />
       </div>
-      <div className="mt-3">
-        <h3 className="text-sm font-semibold uppercase tracking-[0.14em]">{product.name}</h3>
-        <p className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-neutral-500">{product.year}</p>
+      <div className="product-card-meta">
+        <span className="status-pill status-pill-muted">{product.year}</span>
+        <h3 className="mt-3 text-sm font-semibold uppercase tracking-[0.14em]">{product.name}</h3>
+        <p className="mt-3 text-action inline-flex">View record</p>
       </div>
     </Link>
   );
@@ -81,6 +90,20 @@ function HomePage() {
                 View Archive
               </Link>
             </div>
+            <div className="metric-strip mt-10 grid max-w-2xl grid-cols-3 text-white">
+              <div className="metric-tile border-r py-4 pr-4">
+                <p className="text-2xl font-black">{currentDropYear}</p>
+                <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/60">Current Drop</p>
+              </div>
+              <div className="metric-tile border-r px-4 py-4">
+                <p className="text-2xl font-black">{availableProducts.length}</p>
+                <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/60">Shop Items</p>
+              </div>
+              <div className="py-4 pl-4">
+                <p className="text-2xl font-black">{archiveYears.length}</p>
+                <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/60">Archive Years</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -96,10 +119,10 @@ function HomePage() {
       <section className="page-shell py-16 sm:py-20">
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Available Now</p>
-            <h2 className="mt-2 text-3xl font-black uppercase sm:text-5xl">Current Drop</h2>
+            <p className="section-kicker">Available Now</p>
+            <h2 className="section-title mt-2">Current Drop</h2>
           </div>
-          <Link to="/products" className="text-xs font-bold uppercase tracking-[0.22em] underline underline-offset-4">
+          <Link to="/products" className="text-action">
             View all merch
           </Link>
         </div>
@@ -125,8 +148,13 @@ function HomePage() {
             />
             <div className="category-overlay absolute inset-0" />
             <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-white">
-              <h2 className="text-3xl font-black uppercase tracking-normal">{tile.label}</h2>
-              <span className="text-xs font-bold uppercase tracking-[0.22em]">Shop</span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/65">
+                  {availableProducts.filter((product) => product.category === tile.value).length} current
+                </p>
+                <h2 className="mt-2 text-3xl font-black uppercase tracking-normal">{tile.label}</h2>
+              </div>
+              <span className="text-action">Shop</span>
             </div>
           </Link>
         ))}
@@ -135,10 +163,10 @@ function HomePage() {
       <section className="page-shell py-16 sm:py-20">
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Past Releases</p>
-            <h2 className="mt-2 text-3xl font-black uppercase sm:text-5xl">Archive</h2>
+            <p className="section-kicker">Past Releases</p>
+            <h2 className="section-title mt-2">Archive</h2>
           </div>
-          <Link to="/products?view=archive" className="text-xs font-bold uppercase tracking-[0.22em] underline underline-offset-4">
+          <Link to="/products?view=archive" className="text-action">
             Browse archive
           </Link>
         </div>
@@ -153,12 +181,12 @@ function HomePage() {
       <section className="surface-band py-16">
         <div className="page-shell grid gap-8 md:grid-cols-[1.2fr_0.8fr] md:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Built For The Department</p>
+            <p className="section-kicker">Built For The Department</p>
             <h2 className="mt-3 max-w-4xl text-3xl font-black uppercase leading-tight sm:text-5xl">
               One place for the newest CPE merch and the releases that came before it.
             </h2>
           </div>
-          <p className="text-base leading-7 text-neutral-600">
+          <p className="body-copy text-base">
             Each year gets its own drop. When a release ends, it moves into the archive as a visual record: photo,
             name, and year only.
           </p>

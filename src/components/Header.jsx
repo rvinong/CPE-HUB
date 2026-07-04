@@ -10,26 +10,26 @@ const navItems = [
   { label: "About", path: "/about" },
 ];
 
-const IconButton = ({ children, label, onClick, as: Component = "button", to }) => {
+const IconButton = ({ children, label, onClick, as: Component = "button", to, ...props }) => {
   const className = "focus-ring icon-button grid h-10 w-10 place-items-center";
 
   if (Component === Link) {
     return (
-      <Link to={to} aria-label={label} className={className}>
+      <Link to={to} aria-label={label} className={className} {...props}>
         {children}
       </Link>
     );
   }
 
   return (
-    <button type="button" aria-label={label} onClick={onClick} className={className}>
+    <button type="button" aria-label={label} onClick={onClick} className={className} {...props}>
       {children}
     </button>
   );
 };
 
 function Header() {
-  const { cartItems, isCartOpen, toggleCart, removeFromCart, updateQty } = useCart();
+  const { cartItems, isCartOpen, toggleCart, closeCart, removeFromCart, updateQty } = useCart();
   const { isAdmin, isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -64,8 +64,8 @@ function Header() {
               <Link
                 key={item.label}
                 to={item.path}
-                className={`text-xs font-semibold uppercase tracking-[0.22em] transition hover:text-neutral-500 ${
-                  isCurrentPath(item.path) ? "text-neutral-950" : "text-neutral-600"
+                className={`header-link text-xs font-semibold uppercase tracking-[0.22em] transition ${
+                  isCurrentPath(item.path) ? "header-link-active" : ""
                 }`}
               >
                 {item.label}
@@ -74,7 +74,9 @@ function Header() {
             {isAdmin && isAuthenticated && (
               <Link
                 to="/admin"
-                className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-600 transition hover:text-neutral-950"
+                className={`header-link text-xs font-semibold uppercase tracking-[0.22em] transition ${
+                  isCurrentPath("/admin") ? "header-link-active" : ""
+                }`}
               >
                 Admin
               </Link>
@@ -82,9 +84,17 @@ function Header() {
           </nav>
 
           <div className="flex items-center md:hidden">
-            <IconButton label="Toggle menu" onClick={() => setMobileMenuOpen((open) => !open)}>
+            <IconButton
+              label="Toggle menu"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-expanded={mobileMenuOpen}
+            >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 7h16M4 12h16M4 17h16" />
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 6l12 12M18 6 6 18" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 7h16M4 12h16M4 17h16" />
+                )}
               </svg>
             </IconButton>
           </div>
@@ -124,7 +134,7 @@ function Header() {
               </button>
             </form>
 
-            <IconButton Component={Link} as={Link} to="/account" label="Account">
+            <IconButton as={Link} to="/account" label="Account">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 21a8 8 0 1 0-16 0M15.5 7.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" />
               </svg>
@@ -169,7 +179,9 @@ function Header() {
                     key={item.label}
                     to={item.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-sm font-semibold uppercase tracking-[0.22em] text-neutral-900"
+                    className={`token-divider border-b pb-3 text-sm font-semibold uppercase tracking-[0.22em] ${
+                      isCurrentPath(item.path) ? "text-neutral-950" : "text-neutral-600"
+                    }`}
                   >
                     {item.label}
                   </Link>
@@ -178,7 +190,9 @@ function Header() {
                   <Link
                     to="/admin"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-sm font-semibold uppercase tracking-[0.22em] text-neutral-900"
+                    className={`token-divider border-b pb-3 text-sm font-semibold uppercase tracking-[0.22em] ${
+                      isCurrentPath("/admin") ? "text-neutral-950" : "text-neutral-600"
+                    }`}
                   >
                     Admin
                   </Link>
@@ -192,7 +206,7 @@ function Header() {
       {isCartOpen && (
         <CartPopup
           cartItems={cartItems}
-          onClose={toggleCart}
+          onClose={closeCart}
           onRemove={removeFromCart}
           onUpdateQty={updateQty}
         />
