@@ -55,7 +55,7 @@ const App = () => {
       <CartProvider>
         <Router>
           <ScrollToTop />
-          <div className="min-h-screen bg-[#f7f4ef] text-neutral-950 flex flex-col">
+          <div className="app-canvas min-h-screen flex flex-col">
             <AppContent />
           </div>
         </Router>

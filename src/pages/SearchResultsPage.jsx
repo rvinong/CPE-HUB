@@ -52,13 +52,13 @@ export default function SearchResultsPage() {
   };
 
   return (
-    <div className="bg-[#f7f4ef] py-12">
+    <div className="app-canvas py-12">
       <div className="page-shell">
         <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Search</p>
         <h1 className="mt-2 text-4xl font-black uppercase sm:text-6xl">"{searchTerm}"</h1>
 
         {filteredProducts.length === 0 ? (
-          <div className="mt-10 border border-neutral-950/10 bg-white p-8 text-neutral-600">
+          <div className="surface-panel mt-10 p-8 text-neutral-600">
             No merch found for this search.
           </div>
         ) : (
@@ -67,9 +67,9 @@ export default function SearchResultsPage() {
               const isArchive = product.status === MERCH_STATUS.ARCHIVED;
 
               return (
-                <article key={product.productId} className="group">
+                <article key={product.productId} className="interactive-card group">
                   <Link to={`/products/detail/${product.productId}`} className="block">
-                    <div className={`${isArchive ? "bg-neutral-200" : "product-media"} aspect-[4/5] overflow-hidden`}>
+                    <div className={`${isArchive ? "archive-media" : "product-media"} aspect-[4/5] overflow-hidden`}>
                       <img
                         src={product.image}
                         alt={product.name}
@@ -88,7 +88,7 @@ export default function SearchResultsPage() {
                     <button
                       type="button"
                       onClick={() => handleAddToCart(product)}
-                      className="mt-4 w-full bg-neutral-950 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-neutral-700"
+                      className="ui-button-primary mt-4 w-full px-4 py-3"
                     >
                       Add to Cart
                     </button>
@@ -101,7 +101,7 @@ export default function SearchResultsPage() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 bg-neutral-950 px-5 py-3 text-sm font-semibold text-white shadow-xl">
+        <div className="ui-toast fixed bottom-6 left-1/2 z-50 -translate-x-1/2 px-5 py-3 text-sm font-semibold">
           {toast}
         </div>
       )}

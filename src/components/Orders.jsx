@@ -47,13 +47,13 @@ const Orders = () => {
   };
 
   if (loading) return <div>Loading orders...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+  if (error) return <div className="error-text">{error}</div>;
   if (orders.length === 0) return <div>No orders found.</div>;
 
   return (
     <div className="grid gap-4">
       {orders.map((order) => (
-        <div key={order.id} className="border border-neutral-950/10 bg-white p-4">
+        <div key={order.id} className="surface-panel p-4">
           <h3 className="font-semibold">Order ID: {order.id}</h3>
           <p className="mt-1 text-sm text-neutral-600">Status: {order.status}</p>
           <p className="mt-1 text-sm font-semibold">Total: {formatPrice(order.total)}</p>
@@ -73,7 +73,7 @@ const Orders = () => {
               type="button"
               onClick={() => confirmCancelOrder(order.id)}
               disabled={cancellingOrderId === order.id}
-              className="mt-4 bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+              className="ui-button-danger mt-4 px-4 py-2 disabled:opacity-50"
             >
               {cancellingOrderId === order.id ? "Cancelling..." : "Cancel Order"}
             </button>
@@ -82,14 +82,14 @@ const Orders = () => {
       ))}
 
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-sm bg-white p-6 shadow-lg">
+        <div className="backdrop-scrim fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="modal-panel w-full max-w-sm p-6">
             <p className="mb-4">Are you sure you want to cancel this order?</p>
             <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setShowConfirm(false)} className="border px-4 py-2">
+              <button type="button" onClick={() => setShowConfirm(false)} className="ui-button-secondary px-4 py-2">
                 No
               </button>
-              <button type="button" onClick={handleCancelOrder} className="bg-red-600 px-4 py-2 text-white">
+              <button type="button" onClick={handleCancelOrder} className="ui-button-danger px-4 py-2">
                 Yes, Cancel
               </button>
             </div>

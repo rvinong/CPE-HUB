@@ -21,7 +21,7 @@ function ProductCard({ product, selectedSize, onSelectSize, onAddToCart }) {
   const oneSize = product.sizes.some((size) => size.toLowerCase() === "one size");
 
   return (
-    <article className="group">
+    <article className="interactive-card group">
       <Link to={`/products/detail/${product.productId}`} className="block">
         <div className="product-media aspect-[4/5] overflow-hidden">
           <img
@@ -48,8 +48,8 @@ function ProductCard({ product, selectedSize, onSelectSize, onAddToCart }) {
               onClick={() => onSelectSize(product.productId, size)}
               className={`h-9 min-w-10 border px-3 text-xs font-bold uppercase tracking-[0.12em] transition ${
                 selectedSize === size
-                  ? "border-neutral-950 bg-neutral-950 text-white"
-                  : "border-neutral-950/20 bg-white text-neutral-900 hover:border-neutral-950"
+                  ? "ui-chip-active"
+                  : "ui-chip"
               }`}
             >
               {size}
@@ -61,7 +61,7 @@ function ProductCard({ product, selectedSize, onSelectSize, onAddToCart }) {
       <button
         type="button"
         onClick={() => onAddToCart(product)}
-        className="mt-4 w-full bg-neutral-950 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-neutral-700"
+        className="ui-button-primary mt-4 w-full px-4 py-3"
       >
         Add to Cart
       </button>
@@ -71,8 +71,8 @@ function ProductCard({ product, selectedSize, onSelectSize, onAddToCart }) {
 
 function ArchiveCard({ product }) {
   return (
-    <Link to={`/products/detail/${product.productId}`} className="group block">
-      <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
+    <Link to={`/products/detail/${product.productId}`} className="interactive-card group block">
+      <div className="archive-media aspect-[3/4] overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
@@ -173,8 +173,8 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="bg-[#f7f4ef]">
-      <section className="border-b border-neutral-950 bg-white py-12">
+    <div className="app-canvas">
+      <section className="surface-band strong-divider border-b py-12">
         <div className="page-shell">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">CPE Merch</p>
           <div className="mt-3 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
@@ -185,14 +185,14 @@ export default function ProductPage() {
               <p className="mt-4 max-w-2xl text-neutral-600">
                 {archiveOnly
                   ? "Past releases are preserved as a lookbook with photo, name, and year only."
-                  : "Current merch is available for checkout. Past drops live below as a separate archive."}
+                  : "Available now. Archive below."}
               </p>
             </div>
             {!archiveOnly && (
               <select
                 value={sortOption}
                 onChange={(event) => setSortOption(event.target.value)}
-                className="h-11 border border-neutral-950/20 bg-[#f7f4ef] px-3 text-sm font-medium outline-none"
+                className="mobile-safe-width ui-select h-11 px-3 text-sm font-medium sm:w-auto"
               >
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
@@ -206,15 +206,15 @@ export default function ProductPage() {
       {!archiveOnly && (
         <section className="page-shell py-12 sm:py-16">
           <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-wrap gap-2">
+            <div className="mobile-safe-width grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               {categoryFilters.map((filter) => (
                 <Link
                   key={filter.value}
                   to={filter.path}
-                  className={`border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] transition ${
+                  className={`border px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.18em] transition ${
                     normalizedCategory === filter.value
-                      ? "border-neutral-950 bg-neutral-950 text-white"
-                      : "border-neutral-950/20 bg-white text-neutral-900 hover:border-neutral-950"
+                      ? "ui-chip-active"
+                      : "ui-chip"
                   }`}
                 >
                   {filter.label}
@@ -229,13 +229,13 @@ export default function ProductPage() {
           </div>
 
           {loading ? (
-            <div className="min-h-[320px] animate-pulse bg-white" />
+            <div className="skeleton-block min-h-[320px] animate-pulse" />
           ) : availableProducts.length === 0 ? (
-            <div className="border border-neutral-950/10 bg-white p-8 text-neutral-600">
+            <div className="surface-panel p-8 text-neutral-600">
               No current merch found for this category.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mobile-safe-width grid grid-cols-1 gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
               {availableProducts.map((product) => (
                 <ProductCard
                   key={product.productId}
@@ -250,7 +250,7 @@ export default function ProductPage() {
         </section>
       )}
 
-      <section id="archive" className={`${archiveOnly ? "page-shell py-12 sm:py-16" : "border-t border-neutral-950 bg-white py-12 sm:py-16"}`}>
+      <section id="archive" className={`${archiveOnly ? "page-shell py-12 sm:py-16" : "surface-band strong-divider border-t py-12 sm:py-16"}`}>
         <div className={archiveOnly ? "" : "page-shell"}>
           <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
@@ -264,7 +264,7 @@ export default function ProductPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mobile-safe-width grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {archiveProducts.map((product) => (
               <ArchiveCard key={product.productId} product={product} />
             ))}
@@ -273,7 +273,7 @@ export default function ProductPage() {
       </section>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 bg-neutral-950 px-5 py-3 text-sm font-semibold text-white shadow-xl">
+        <div className="ui-toast fixed bottom-6 left-1/2 z-50 -translate-x-1/2 px-5 py-3 text-sm font-semibold">
           {toast}
         </div>
       )}

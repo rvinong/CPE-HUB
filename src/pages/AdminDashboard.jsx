@@ -23,7 +23,7 @@ const emptyProduct = {
   description: "",
 };
 
-const inputClass = "h-11 border border-neutral-950/20 bg-white px-3 text-sm outline-none focus:border-neutral-950";
+const inputClass = "ui-input h-11 px-3 text-sm";
 
 function ProductForm({ data, setData, mode, onImageUpload, uploading }) {
   const isArchive = data.status === MERCH_STATUS.ARCHIVED;
@@ -229,12 +229,12 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="bg-[#f7f4ef] py-10">
+    <div className="app-canvas py-10">
       <div className="page-shell">
         <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Admin</p>
         <h1 className="mt-2 text-4xl font-black uppercase">Dashboard</h1>
 
-        <div className="mt-8 flex flex-wrap gap-2 border-b border-neutral-950">
+        <div className="strong-divider mt-8 flex flex-wrap gap-2 border-b">
           {[
             ["products", "Products"],
             ["users", "Users"],
@@ -244,8 +244,8 @@ function AdminDashboard() {
               key={key}
               type="button"
               onClick={() => setActiveTab(key)}
-              className={`px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] ${
-                activeTab === key ? "bg-neutral-950 text-white" : "bg-white text-neutral-700"
+              className={`px-5 py-3 ${
+                activeTab === key ? "ui-button-primary" : "ui-button-secondary"
               }`}
             >
               {label}
@@ -255,7 +255,7 @@ function AdminDashboard() {
 
         {activeTab === "products" && (
           <section className="mt-8 grid gap-8">
-            <div className="bg-white p-5">
+            <div className="surface-panel p-5">
               <h2 className="text-lg font-black uppercase">Add Merch</h2>
               <p className="mt-2 text-sm text-neutral-500">
                 Available merch can be ordered. Archive merch only needs photo, name, and year.
@@ -269,19 +269,19 @@ function AdminDashboard() {
                   uploading={uploadingImage}
                 />
               </div>
-              {addProductError && <p className="mt-4 text-sm font-semibold text-red-600">{addProductError}</p>}
+              {addProductError && <p className="error-text mt-4 text-sm font-semibold">{addProductError}</p>}
               <button
                 type="button"
                 onClick={handleAddProduct}
-                className="mt-5 bg-neutral-950 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white"
+                className="ui-button-primary mt-5 px-5 py-3"
               >
                 Add Merch
               </button>
             </div>
 
-            <div className="overflow-auto bg-white">
+            <div className="table-shell overflow-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-neutral-950 bg-neutral-950 text-white">
+                <thead className="table-head border-b">
                   <tr>
                     <th className="px-4 py-3">ID</th>
                     <th className="px-4 py-3">Image</th>
@@ -297,7 +297,7 @@ function AdminDashboard() {
                 <tbody>
                   {normalizedProducts.map((product) =>
                     editingProductId === product.productId ? (
-                      <tr key={product.productId} className="border-b border-neutral-950/10 align-top">
+                      <tr key={product.productId} className="token-divider border-b align-top">
                         <td className="px-4 py-4 font-semibold">{product.productId}</td>
                         <td colSpan={7} className="px-4 py-4">
                           <ProductForm
@@ -310,20 +310,20 @@ function AdminDashboard() {
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">
-                            <button type="button" onClick={saveEdit} className="bg-neutral-950 px-3 py-2 text-xs font-bold uppercase text-white">
+                            <button type="button" onClick={saveEdit} className="ui-button-primary px-3 py-2">
                               Save
                             </button>
-                            <button type="button" onClick={() => setEditingProductId(null)} className="border border-neutral-950 px-3 py-2 text-xs font-bold uppercase">
+                            <button type="button" onClick={() => setEditingProductId(null)} className="ui-button-secondary px-3 py-2">
                               Cancel
                             </button>
                           </div>
                         </td>
                       </tr>
                     ) : (
-                      <tr key={product.productId} className="border-b border-neutral-950/10">
+                      <tr key={product.productId} className="token-divider border-b">
                         <td className="px-4 py-4 font-semibold">{product.productId}</td>
                         <td className="px-4 py-4">
-                          <img src={product.image} alt={product.name} className="h-14 w-14 bg-[#f7f4ef] object-contain p-1" />
+                          <img src={product.image} alt={product.name} className="surface-panel-plain h-14 w-14 object-contain p-1" />
                         </td>
                         <td className="px-4 py-4 font-semibold">{product.name}</td>
                         <td className="px-4 py-4">{product.year}</td>
@@ -335,10 +335,10 @@ function AdminDashboard() {
                         <td className="px-4 py-4">{product.status === MERCH_STATUS.ARCHIVED ? "-" : product.quantity}</td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">
-                            <button type="button" onClick={() => startEditing(product)} className="border border-neutral-950 px-3 py-2 text-xs font-bold uppercase">
+                            <button type="button" onClick={() => startEditing(product)} className="ui-button-secondary px-3 py-2">
                               Edit
                             </button>
-                            <button type="button" onClick={() => handleDelete(product.productId)} className="bg-red-600 px-3 py-2 text-xs font-bold uppercase text-white">
+                            <button type="button" onClick={() => handleDelete(product.productId)} className="ui-button-danger px-3 py-2">
                               Delete
                             </button>
                           </div>
@@ -353,9 +353,9 @@ function AdminDashboard() {
         )}
 
         {activeTab === "users" && (
-          <section className="mt-8 overflow-auto bg-white">
+          <section className="table-shell mt-8 overflow-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-neutral-950 text-white">
+              <thead className="table-head">
                 <tr>
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Birthday</th>
@@ -364,7 +364,7 @@ function AdminDashboard() {
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user._id} className="border-b border-neutral-950/10">
+                  <tr key={user._id} className="token-divider border-b">
                     <td className="px-4 py-4">{user.name}</td>
                     <td className="px-4 py-4">{user.birthday ? new Date(user.birthday).toLocaleDateString() : ""}</td>
                     <td className="px-4 py-4">{user.mobile || ""}</td>
@@ -376,9 +376,9 @@ function AdminDashboard() {
         )}
 
         {activeTab === "orders" && (
-          <section className="mt-8 overflow-auto bg-white">
+          <section className="table-shell mt-8 overflow-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-neutral-950 text-white">
+              <thead className="table-head">
                 <tr>
                   <th className="px-4 py-3">Order</th>
                   <th className="px-4 py-3">Customer</th>
@@ -390,7 +390,7 @@ function AdminDashboard() {
               </thead>
               <tbody>
                 {orders.map((order) => (
-                  <tr key={order._id} className="border-b border-neutral-950/10 align-top">
+                  <tr key={order._id} className="token-divider border-b align-top">
                     <td className="px-4 py-4">{order._id}</td>
                     <td className="px-4 py-4">{order.userId?.name || order.userId?.email || "Unknown"}</td>
                     <td className="px-4 py-4">

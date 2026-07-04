@@ -16,14 +16,14 @@ function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
         type="button"
         aria-label="Close cart"
         onClick={onClose}
-        className="absolute inset-0 bg-neutral-950/35"
+        className="drawer-scrim absolute inset-0"
       />
-      <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-[#f7f4ef] shadow-2xl">
-        <div className="flex items-center justify-between border-b border-neutral-950 px-6 py-5">
+      <aside className="drawer-panel absolute right-0 top-0 flex h-full w-full max-w-md flex-col">
+        <div className="strong-divider flex items-center justify-between border-b px-6 py-5">
           <h2 className="text-2xl font-black uppercase tracking-normal">Cart</h2>
           <button
             type="button"
-            className="grid h-10 w-10 place-items-center text-2xl leading-none transition hover:bg-neutral-950 hover:text-white"
+            className="icon-button grid h-10 w-10 place-items-center text-2xl leading-none"
             onClick={onClose}
             aria-label="Close cart"
           >
@@ -38,7 +38,7 @@ function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-5 bg-neutral-950 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white"
+                className="ui-button-primary mt-5 px-5 py-3"
               >
                 Continue Shopping
               </button>
@@ -48,17 +48,13 @@ function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
           <>
             <div className="flex-1 overflow-auto px-6 py-5">
               {cartItems.map((item) => (
-                <div key={item.id} className="grid grid-cols-[88px_1fr_auto] gap-4 border-b border-neutral-950/10 py-4">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-20 w-20 bg-white object-contain p-2"
-                  />
+                <div key={item.id} className="token-divider grid grid-cols-[88px_1fr_auto] gap-4 border-b py-4">
+                  <img src={item.image} alt={item.name} className="surface-panel-plain h-20 w-20 object-contain p-2" />
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-[0.12em]">{item.name}</h3>
                     {item.size && <p className="mt-1 text-sm text-neutral-500">Size: {item.size}</p>}
                     <p className="mt-1 text-sm font-semibold">{formatPrice(item.price)}</p>
-                    <div className="mt-3 flex h-9 w-28 border border-neutral-950/20 bg-white">
+                    <div className="ui-input mt-3 flex h-9 w-28">
                       <button
                         type="button"
                         onClick={() => onUpdateQty(item.id, Number(item.qty || 1) - 1)}
@@ -88,7 +84,7 @@ function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
               ))}
             </div>
 
-            <div className="border-t border-neutral-950 bg-white px-6 py-5">
+            <div className="summary-panel border-t px-6 py-5">
               <div className="mb-5 flex items-center justify-between text-lg font-black uppercase">
                 <span>Total</span>
                 <span>{formatPrice(total)}</span>
@@ -96,7 +92,7 @@ function CartPopup({ cartItems, onClose, onRemove, onUpdateQty }) {
               <button
                 type="button"
                 onClick={handleCheckout}
-                className="w-full bg-neutral-950 px-5 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-700"
+                className="ui-button-primary w-full px-5 py-4"
               >
                 Checkout
               </button>

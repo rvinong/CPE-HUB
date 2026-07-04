@@ -15,7 +15,7 @@ const categoryTiles = [
 
 function ProductCard({ product }) {
   return (
-    <Link to={`/products/detail/${product.productId}`} className="group block">
+    <Link to={`/products/detail/${product.productId}`} className="interactive-card group block">
       <div className="product-media aspect-[4/5] overflow-hidden">
         <img
           src={product.image}
@@ -36,8 +36,8 @@ function ProductCard({ product }) {
 
 function ArchiveCard({ product }) {
   return (
-    <Link to={`/products/detail/${product.productId}`} className="group block">
-      <div className="aspect-[3/4] overflow-hidden bg-neutral-200">
+    <Link to={`/products/detail/${product.productId}`} className="interactive-card group block">
+      <div className="archive-media aspect-[3/4] overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
@@ -54,17 +54,12 @@ function ArchiveCard({ product }) {
 
 function HomePage() {
   return (
-    <div className="bg-[#f7f4ef]">
-      <section
-        className="relative min-h-[calc(100svh-132px)] overflow-hidden bg-neutral-950 text-white"
-        style={{
-          backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.72), rgba(0,0,0,0.2)), url(${heroBackground})`,
-          backgroundPosition: "center",
-          backgroundSize: "cover",
-        }}
-      >
+    <div className="app-canvas">
+      <section className="hero-section relative min-h-[calc(100svh-132px)] overflow-hidden">
+        <img src={heroBackground} alt="" aria-hidden="true" className="hero-image absolute inset-0 h-full w-full object-cover" />
+        <div className="hero-scrim absolute inset-0" />
         <div className="page-shell flex min-h-[calc(100svh-132px)] items-end pb-12 pt-24">
-          <div className="max-w-3xl">
+          <div className="relative z-10 max-w-3xl">
             <p className="mb-4 text-xs font-bold uppercase tracking-[0.32em] text-white/70">Computer Engineering Merch</p>
             <h1 className="text-5xl font-black uppercase leading-[0.95] tracking-normal sm:text-7xl lg:text-8xl">
               CPE HUB
@@ -75,13 +70,13 @@ function HomePage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/products"
-                className="bg-white px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-neutral-950 transition hover:bg-neutral-200"
+                className="ui-button-secondary px-6 py-3"
               >
                 Shop Current Drop
               </Link>
               <Link
                 to="/products?view=archive"
-                className="border border-white/70 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white transition hover:bg-white hover:text-neutral-950"
+                className="ui-button-primary px-6 py-3"
               >
                 View Archive
               </Link>
@@ -90,7 +85,7 @@ function HomePage() {
         </div>
       </section>
 
-      <div className="border-y border-neutral-950 bg-neutral-950 py-3 text-white">
+      <div className="dark-band border-y py-3">
         <div className="page-shell flex flex-wrap items-center justify-between gap-3 text-xs font-bold uppercase tracking-[0.24em]">
           <span>Latest yearly drop</span>
           <span>Limited availability</span>
@@ -116,19 +111,19 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 border-y border-neutral-950 md:grid-cols-3">
+      <section className="dark-band grid grid-cols-1 border-y md:grid-cols-3">
         {categoryTiles.map((tile) => (
           <Link
             key={tile.label}
             to={tile.path}
-            className="group relative min-h-[360px] overflow-hidden border-neutral-950 md:border-r last:md:border-r-0"
+            className="interactive-card category-tile group relative min-h-[360px] overflow-hidden md:border-r last:md:border-r-0"
           >
             <img
               src={tile.image}
               alt={tile.label}
               className="absolute inset-0 h-full w-full object-contain p-8 transition duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/75 via-transparent to-transparent" />
+            <div className="category-overlay absolute inset-0" />
             <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-white">
               <h2 className="text-3xl font-black uppercase tracking-normal">{tile.label}</h2>
               <span className="text-xs font-bold uppercase tracking-[0.22em]">Shop</span>
@@ -155,7 +150,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-16">
+      <section className="surface-band py-16">
         <div className="page-shell grid gap-8 md:grid-cols-[1.2fr_0.8fr] md:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Built For The Department</p>

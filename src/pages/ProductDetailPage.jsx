@@ -95,7 +95,7 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="bg-[#f7f4ef] py-8 sm:py-12">
+    <div className="app-canvas py-8 sm:py-12">
       <div className="page-shell">
         <button
           type="button"
@@ -107,7 +107,7 @@ export default function ProductDetailPage() {
 
         {isArchived ? (
           <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <div className="bg-neutral-200">
+            <div className="archive-media">
               <img
                 src={images[selectedImageIndex]}
                 alt={product.name}
@@ -136,8 +136,8 @@ export default function ProductDetailPage() {
                       key={image}
                       type="button"
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`h-20 w-20 border bg-white p-1 ${
-                        selectedImageIndex === index ? "border-neutral-950" : "border-neutral-950/15"
+                      className={`h-20 w-20 border p-1 ${
+                        selectedImageIndex === index ? "ui-chip-active" : "ui-chip"
                       }`}
                     >
                       <img src={image} alt={`${product.name} ${index + 1}`} className="h-full w-full object-contain" />
@@ -164,8 +164,8 @@ export default function ProductDetailPage() {
                         onClick={() => setSelectedSize(size)}
                         className={`h-11 min-w-12 border px-4 text-sm font-bold uppercase transition ${
                           selectedSize === size
-                            ? "border-neutral-950 bg-neutral-950 text-white"
-                            : "border-neutral-950/20 bg-white text-neutral-900 hover:border-neutral-950"
+                            ? "ui-chip-active"
+                            : "ui-chip"
                         }`}
                       >
                         {size}
@@ -177,7 +177,7 @@ export default function ProductDetailPage() {
 
               <div className="mt-8">
                 <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em]">Quantity</p>
-                <div className="flex h-12 w-36 border border-neutral-950/20 bg-white">
+                <div className="ui-input flex h-12 w-36">
                   <button
                     type="button"
                     onClick={() => setQuantity((value) => Math.max(1, value - 1))}
@@ -199,7 +199,7 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="mt-8 w-full bg-neutral-950 px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-700"
+                className="ui-button-primary mt-8 w-full px-6 py-4"
               >
                 Add to Cart
               </button>
@@ -209,7 +209,7 @@ export default function ProductDetailPage() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 bg-neutral-950 px-5 py-3 text-sm font-semibold text-white shadow-xl">
+        <div className="ui-toast fixed bottom-6 left-1/2 z-50 -translate-x-1/2 px-5 py-3 text-sm font-semibold">
           {toast}
         </div>
       )}

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 function Footer() {
   return (
-    <footer className="border-t border-neutral-950 bg-neutral-950 text-white">
+    <footer className="dark-band border-t">
       <div className="page-shell grid gap-10 py-12 md:grid-cols-[1.3fr_0.7fr_0.7fr]">
         <div>
           <h2 className="text-3xl font-black uppercase tracking-[0.14em]">CPE HUB</h2>
@@ -29,7 +29,7 @@ function Footer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-white/15 py-5">
+      <div className="dark-divider border-t py-5">
         <div className="page-shell flex flex-col justify-between gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/45 sm:flex-row">
           <span>Copyright {new Date().getFullYear()} CPE HUB</span>
           <span>Computer Engineering Merch</span>

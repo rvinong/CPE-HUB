@@ -11,8 +11,7 @@ const navItems = [
 ];
 
 const IconButton = ({ children, label, onClick, as: Component = "button", to }) => {
-  const className =
-    "focus-ring grid h-10 w-10 place-items-center text-neutral-900 transition hover:bg-neutral-950 hover:text-white";
+  const className = "focus-ring icon-button grid h-10 w-10 place-items-center";
 
   if (Component === Link) {
     return (
@@ -58,7 +57,7 @@ function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-neutral-950/10 bg-[#f7f4ef]/95 backdrop-blur">
+      <header className="site-header sticky top-0 z-50 border-b backdrop-blur">
         <div className="page-shell grid min-h-[72px] grid-cols-[1fr_auto_1fr] items-center gap-4">
           <nav className="hidden items-center gap-7 md:flex">
             {navItems.map((item) => (
@@ -97,7 +96,7 @@ function Header() {
           <div className="flex items-center justify-end gap-1 sm:gap-2">
             <form
               onSubmit={handleSearchSubmit}
-              className={`hidden items-center border border-neutral-950/15 bg-white/70 md:flex ${
+              className={`ui-input hidden items-center md:flex ${
                 searchOpen ? "w-64" : "w-10"
               } transition-all`}
             >
@@ -116,7 +115,7 @@ function Header() {
                 onClick={() => {
                   if (!searchOpen) setSearchOpen(true);
                 }}
-                className="focus-ring grid h-10 w-10 place-items-center text-neutral-900 transition hover:bg-neutral-950 hover:text-white"
+                className="focus-ring icon-button grid h-10 w-10 place-items-center"
                 aria-label="Search"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -134,14 +133,14 @@ function Header() {
             <button
               type="button"
               onClick={toggleCart}
-              className="focus-ring relative grid h-10 w-10 place-items-center text-neutral-900 transition hover:bg-neutral-950 hover:text-white"
+              className="focus-ring icon-button relative grid h-10 w-10 place-items-center"
               aria-label="Cart"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6.5 8.5h11l-1 11h-9l-1-11ZM9 8.5a3 3 0 1 1 6 0" />
               </svg>
               {totalQty > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-neutral-950 px-1 text-[10px] font-bold text-white">
+                <span className="cart-count absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center px-1 text-[10px] font-bold">
                   {totalQty}
                 </span>
               )}
@@ -150,9 +149,9 @@ function Header() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="border-t border-neutral-950/10 bg-[#f7f4ef] md:hidden">
+          <div className="mobile-menu-panel border-t md:hidden">
             <div className="page-shell py-5">
-              <form onSubmit={handleSearchSubmit} className="mb-5 flex border border-neutral-950/15 bg-white">
+              <form onSubmit={handleSearchSubmit} className="ui-input mb-5 flex">
                 <input
                   type="search"
                   value={searchTerm}

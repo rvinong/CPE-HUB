@@ -10,7 +10,7 @@ const emptyAddress = {
   phone: "",
 };
 
-const inputClass = "w-full border border-neutral-950/20 bg-[#f7f4ef] px-3 py-2 outline-none focus:border-neutral-950";
+const inputClass = "ui-input w-full px-3 py-2";
 
 const Addresses = () => {
   const [addresses, setAddresses] = useState([]);
@@ -86,13 +86,13 @@ const Addresses = () => {
   return (
     <div>
       <h3 className="text-xl font-semibold">Your Addresses</h3>
-      {error && <div className="mt-3 text-sm font-semibold text-red-600">{error}</div>}
+      {error && <div className="error-text mt-3 text-sm font-semibold">{error}</div>}
       {addresses.length === 0 && <div className="mt-4 text-neutral-600">No addresses found.</div>}
 
       <div className="mt-4 grid gap-4">
         {addresses.map((address) =>
           editingId === address.id ? (
-            <form key={address.id} onSubmit={handleSaveEdit} className="grid gap-3 border border-neutral-950/10 bg-white p-4">
+            <form key={address.id} onSubmit={handleSaveEdit} className="surface-panel grid gap-3 p-4">
               {["street", "city", "state", "zip", "country", "phone"].map((field) => (
                 <input
                   key={field}
@@ -105,16 +105,16 @@ const Addresses = () => {
                 />
               ))}
               <div className="flex gap-2">
-                <button type="submit" className="bg-neutral-950 px-4 py-2 text-white">
+                <button type="submit" className="ui-button-primary px-4 py-2">
                   Save
                 </button>
-                <button type="button" onClick={() => setEditingId(null)} className="border border-neutral-950 px-4 py-2">
+                <button type="button" onClick={() => setEditingId(null)} className="ui-button-secondary px-4 py-2">
                   Cancel
                 </button>
               </div>
             </form>
           ) : (
-            <div key={address.id} className="border border-neutral-950/10 bg-white p-4">
+            <div key={address.id} className="surface-panel p-4">
               <p>{address.street}, {address.city}, {address.state}, {address.zip}</p>
               <p>{address.country}</p>
               <p>Phone: {address.phone}</p>
@@ -125,11 +125,11 @@ const Addresses = () => {
                     setEditingId(address.id);
                     setEditingAddress(address);
                   }}
-                  className="border border-neutral-950 px-3 py-1"
+                  className="ui-button-secondary px-3 py-2"
                 >
                   Edit
                 </button>
-                <button type="button" onClick={() => handleDelete(address.id)} className="bg-red-600 px-3 py-1 text-white">
+                <button type="button" onClick={() => handleDelete(address.id)} className="ui-button-danger px-3 py-2">
                   Delete
                 </button>
               </div>
@@ -139,7 +139,7 @@ const Addresses = () => {
       </div>
 
       <h3 className="mt-8 text-xl font-semibold">Add New Address</h3>
-      <form onSubmit={handleAdd} className="mt-4 grid gap-3 border border-neutral-950/10 bg-white p-4">
+      <form onSubmit={handleAdd} className="surface-panel mt-4 grid gap-3 p-4">
         {["street", "city", "state", "zip", "country", "phone"].map((field) => (
           <input
             key={field}
@@ -151,7 +151,7 @@ const Addresses = () => {
             required
           />
         ))}
-        <button type="submit" className="bg-neutral-950 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white">
+        <button type="submit" className="ui-button-primary px-4 py-3">
           Add Address
         </button>
       </form>

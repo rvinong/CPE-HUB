@@ -4,8 +4,8 @@ import aboutImage from "../assets/images/1.jpg";
 
 export default function AboutPage() {
   return (
-    <div className="bg-[#f7f4ef]">
-      <section className="border-b border-neutral-950 bg-white py-14">
+    <div className="app-canvas">
+      <section className="surface-band strong-divider border-b py-14">
         <div className="page-shell">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">About</p>
           <h1 className="mt-3 max-w-4xl text-4xl font-black uppercase leading-none sm:text-6xl">
@@ -16,7 +16,7 @@ export default function AboutPage() {
 
       <section className="page-shell grid gap-10 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
-          <img src={aboutImage} alt="CPE HUB community" className="aspect-[4/5] w-full object-cover" />
+          <img src={aboutImage} alt="CPE HUB community" className="interactive-card aspect-[4/5] w-full object-cover" />
         </div>
         <div>
           <h2 className="text-3xl font-black uppercase sm:text-5xl">CPE HUB</h2>
@@ -33,13 +33,13 @@ export default function AboutPage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               to="/products"
-              className="bg-neutral-950 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-700"
+              className="ui-button-primary px-6 py-3"
             >
               Shop Current Drop
             </Link>
             <Link
               to="/products?view=archive"
-              className="border border-neutral-950 px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] transition hover:bg-neutral-950 hover:text-white"
+              className="ui-button-secondary px-6 py-3"
             >
               View Archive
             </Link>
@@ -47,7 +47,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="border-t border-neutral-950 bg-neutral-950 py-12 text-white">
+      <section className="dark-band border-t py-12">
         <div className="page-shell grid gap-8 sm:grid-cols-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/50">01</p>

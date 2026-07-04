@@ -38,20 +38,20 @@ export default function AccountPage() {
 
   if (isAuthenticated) {
     return (
-      <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow mt-10">
-        <div className="flex justify-between items-center border-b mb-6">
+      <div className="surface-panel mx-auto mt-10 max-w-4xl p-6">
+        <div className="token-divider mb-6 flex items-center justify-between border-b">
           <div>
             <button
-              className={`px-4 py-2 font-semibold ${
-                activeTab === 'orders' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'
+              className={`account-tab px-4 py-2 font-semibold ${
+                activeTab === 'orders' ? 'account-tab-active' : ''
               }`}
               onClick={() => setActiveTab('orders')}
             >
               Orders
             </button>
             <button
-              className={`ml-4 px-4 py-2 font-semibold ${
-                activeTab === 'addresses' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'
+              className={`account-tab ml-4 px-4 py-2 font-semibold ${
+                activeTab === 'addresses' ? 'account-tab-active' : ''
               }`}
               onClick={() => setActiveTab('addresses')}
             >
@@ -60,7 +60,7 @@ export default function AccountPage() {
           </div>
           <button
             onClick={handleLogout}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+            className="ui-button-danger px-4 py-2"
           >
             Log Out
           </button>
@@ -74,23 +74,23 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-      <h1 className="text-4xl font-extrabold mb-10 text-center text-gray-900">
+    <div className="app-canvas flex min-h-screen flex-col items-center justify-center p-4">
+      <h1 className="mb-10 text-center text-4xl font-extrabold">
         {showLogin ? "Login" : "Sign Up"}
       </h1>
-      <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
+      <div className="surface-panel w-full max-w-md p-8">
         {showLogin ? (
           <>
             <LoginForm />
             <div className="mt-4 text-center">
-              <a href="#" className="text-sm text-blue-600 hover:underline">
+              <a href="#" className="text-sm text-neutral-500 hover:text-neutral-950 hover:underline">
                 Forgot your password?
               </a>
             </div>
             <div className="mt-6 text-center">
               <button
                 onClick={toggleForm}
-                className="text-sm text-gray-600 hover:underline focus:outline-none"
+                className="text-sm text-neutral-500 hover:text-neutral-950 hover:underline focus:outline-none"
               >
                 Sign up
               </button>
@@ -102,7 +102,7 @@ export default function AccountPage() {
             <div className="mt-6 text-center">
               <button
                 onClick={toggleForm}
-                className="text-sm text-gray-600 hover:underline focus:outline-none"
+                className="text-sm text-neutral-500 hover:text-neutral-950 hover:underline focus:outline-none"
               >
                 Log in
               </button>

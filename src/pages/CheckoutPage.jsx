@@ -48,8 +48,8 @@ const CheckoutPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef]">
-      <header className="border-b border-neutral-950 bg-white">
+    <div className="app-canvas min-h-screen">
+      <header className="surface-band strong-divider border-b">
         <div className="page-shell flex min-h-[72px] items-center justify-between">
           <Link to="/" className="text-xl font-black uppercase tracking-[0.18em]">
             CPE HUB
@@ -61,7 +61,7 @@ const CheckoutPage = () => {
       </header>
 
       <main className="page-shell grid gap-8 py-10 lg:grid-cols-[1fr_420px]">
-        <section className="bg-white p-6 sm:p-8">
+        <section className="surface-panel p-6 sm:p-8">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-neutral-500">Checkout</p>
           <h1 className="mt-2 text-4xl font-black uppercase">Order Details</h1>
 
@@ -72,7 +72,7 @@ const CheckoutPage = () => {
                 <input
                   type="email"
                   placeholder="Email"
-                  className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950"
+                  className="ui-input h-12 px-3"
                   required
                 />
                 <label className="flex items-center gap-3 text-sm text-neutral-600">
@@ -85,27 +85,27 @@ const CheckoutPage = () => {
             <section>
               <h2 className="text-sm font-black uppercase tracking-[0.18em]">Delivery</h2>
               <div className="mt-4 grid gap-4">
-                <select className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" defaultValue="Philippines">
+                <select className="ui-select h-12 px-3" defaultValue="Philippines">
                   <option>Philippines</option>
                 </select>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <input type="text" placeholder="First name" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
-                  <input type="text" placeholder="Last name" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                  <input type="text" placeholder="First name" className="ui-input h-12 px-3" required />
+                  <input type="text" placeholder="Last name" className="ui-input h-12 px-3" required />
                 </div>
-                <input type="text" placeholder="Full address" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
-                <input type="text" placeholder="Barangay / apartment / suite" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" />
+                <input type="text" placeholder="Full address" className="ui-input h-12 px-3" required />
+                <input type="text" placeholder="Barangay / apartment / suite" className="ui-input h-12 px-3" />
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <input type="text" placeholder="City" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
-                  <input type="text" placeholder="Province" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
-                  <input type="text" placeholder="Zip code" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                  <input type="text" placeholder="City" className="ui-input h-12 px-3" required />
+                  <input type="text" placeholder="Province" className="ui-input h-12 px-3" required />
+                  <input type="text" placeholder="Zip code" className="ui-input h-12 px-3" required />
                 </div>
-                <input type="tel" placeholder="Phone" className="h-12 border border-neutral-950/20 bg-[#f7f4ef] px-3 outline-none focus:border-neutral-950" required />
+                <input type="tel" placeholder="Phone" className="ui-input h-12 px-3" required />
               </div>
             </section>
           </div>
         </section>
 
-        <aside className="h-fit bg-neutral-950 p-6 text-white lg:sticky lg:top-8">
+        <aside className="dark-panel h-fit p-6 lg:sticky lg:top-8">
           <h2 className="text-sm font-black uppercase tracking-[0.18em]">Order Summary</h2>
           {checkoutItems.length === 0 ? (
             <p className="mt-8 text-sm text-white/65">Your cart is empty.</p>
@@ -113,7 +113,7 @@ const CheckoutPage = () => {
             <div className="mt-6 divide-y divide-white/15">
               {checkoutItems.map((item) => (
                 <div key={item.id || `${item.productId}-${item.size || ""}`} className="flex gap-4 py-4">
-                  <img src={item.image} alt={item.name} className="h-16 w-16 bg-white object-contain p-1" />
+                  <img src={item.image} alt={item.name} className="surface-panel-plain h-16 w-16 object-contain p-1" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold uppercase tracking-[0.12em]">{item.name}</p>
                     <p className="mt-1 text-xs text-white/60">
@@ -126,7 +126,7 @@ const CheckoutPage = () => {
             </div>
           )}
 
-          <div className="mt-6 border-t border-white/20 pt-5">
+          <div className="dark-divider mt-6 border-t pt-5">
             <div className="flex justify-between text-lg font-black uppercase">
               <span>Total</span>
               <span>{formatPrice(total)}</span>
@@ -135,7 +135,7 @@ const CheckoutPage = () => {
               type="button"
               onClick={handleCheckout}
               disabled={checkoutItems.length === 0 || loading}
-              className="mt-6 w-full bg-white px-5 py-4 text-xs font-bold uppercase tracking-[0.2em] text-neutral-950 transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40"
+              className="ui-button-secondary mt-6 w-full px-5 py-4 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {loading ? "Processing" : "Place Order"}
             </button>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const fieldClass = "w-full border border-neutral-950/20 bg-[#f7f4ef] px-3 py-3 outline-none focus:border-neutral-950";
+const fieldClass = "ui-input w-full px-3 py-3";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -46,11 +46,11 @@ const LoginForm = () => {
         required
         className={fieldClass}
       />
-      {error && <div className="text-sm font-semibold text-red-600">{error}</div>}
+      {error && <div className="error-text text-sm font-semibold">{error}</div>}
       <button
         type="submit"
         disabled={submitting}
-        className="w-full bg-neutral-950 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-neutral-700 disabled:opacity-50"
+        className="ui-button-primary w-full py-3 disabled:opacity-50"
       >
         {submitting ? "Logging In" : "Log In"}
       </button>
